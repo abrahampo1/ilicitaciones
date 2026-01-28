@@ -14,7 +14,7 @@ use Noki\XmlConverter\Convert;
 
 class ImportarLicitaciones extends Command
 {
-    protected $signature = 'app:importar-licitaciones {--batch-size=500 : Tamaño del batch para inserciones}';
+    protected $signature = 'app:importar-licitaciones {--batch-size=500 : Tamaño del batch para inserciones} {--all : Importar todas las licitaciones}';
     protected $description = 'Importar licitaciones desde una fuente externa (optimizado)';
 
     // Cachés en memoria para evitar consultas repetidas
@@ -30,9 +30,9 @@ class ImportarLicitaciones extends Command
         $this->info("Cargando cachés en memoria...");
         $this->preloadCaches();
 
-        $all = $this->ask("¿Deseas importar todas las licitaciones desde el año 2012? (s/n)", "s");
+        $all = $this->option('all');
 
-        if (strtolower($all) === 'n') {
+        if (!$all) {
             $year = $this->ask("¿Que año deseas importar?", 2012);
             $this->importarLicitacion($year);
         } else {

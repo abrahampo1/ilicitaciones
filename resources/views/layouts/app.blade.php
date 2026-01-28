@@ -50,6 +50,7 @@
                 <a href="{{ route('home') }}" class="text-neutral-400 hover:text-neutral-100 transition-colors">Home</a>
                 <a href="{{ route('organismos') }}" class="text-neutral-400 hover:text-neutral-100 transition-colors">Organismos</a>
                 <a href="{{ route('empresas') }}" class="text-neutral-400 hover:text-neutral-100 transition-colors">Empresas</a>
+                <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" class="text-neutral-400 hover:text-neutral-100 transition-colors">GitHub</a>
             </nav>
         </div>
         <div class="p-4">

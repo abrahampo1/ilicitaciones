@@ -251,8 +251,8 @@ class ImportarLicitaciones extends Command
                 'importe_total' => $importes['TotalAmount']['value'] ?? null,
                 'importe_final' => $importes['TaxExclusiveAmount']['value'] ?? null,
                 'importe_estimado' => $importes['EstimatedOverallContractAmount']['value'] ?? null,
-                'fecha_contratacion' => $entry['ContractFolderStatus']['TenderResult']['Contract']['IssueDate'] ?? null,
-                'fecha_actualizacion' => $entry['updated'] ?? null,
+                'fecha_contratacion' => $this->parseDate($entry['ContractFolderStatus']['TenderResult']['Contract']['IssueDate'] ?? null),
+                'fecha_actualizacion' => $this->parseDate($entry['updated'] ?? null),
                 'categoria_id' => $this->categoriasCache[$categoriaXmlId] ?? null,
                 'organismo_id' => $organismoId,
                 'datos_raiz' => json_encode($entry),
@@ -270,8 +270,8 @@ class ImportarLicitaciones extends Command
                     'urgencia' => $entry['ContractFolderStatus']['TenderingProcess']['UrgencyCode']['value'] ?? null,
                     'tipo_procedimiento' => $entry['ContractFolderStatus']['TenderingProcess']['ProcedureCode']['value'] ?? null,
                     'descripcion' => $entry['ContractFolderStatus']['TenderResult']['Description'] ?? null,
-                    'fecha_adjudicacion' => $entry['ContractFolderStatus']['TenderResult']['Contract']['IssueDate'] ?? null,
-                    'fecha_comienzo' => $entry['ContractFolderStatus']['TenderResult']['StartDate'] ?? null,
+                    'fecha_adjudicacion' => $this->parseDate($entry['ContractFolderStatus']['TenderResult']['Contract']['IssueDate'] ?? null),
+                    'fecha_comienzo' => $this->parseDate($entry['ContractFolderStatus']['TenderResult']['StartDate'] ?? null),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -316,5 +316,15 @@ class ImportarLicitaciones extends Command
     function retrieveUrl($year)
     {
         return "https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3_" . $year . ".zip";
+    }
+
+    private function parseDate($date)
+    {
+        if (!$date) return null;
+        try {
+            return \Carbon\Carbon::parse($date)->format('Y-m-d H:i:s');
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

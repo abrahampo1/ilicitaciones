@@ -29,6 +29,9 @@ return new class extends Migration {
             $table->foreignId('categoria_id')->nullable()->constrained('categorias')->onDelete('set null');
 
             $table->json('datos_raiz')->nullable();
+
+            // el identificador debe ser un indice unico
+            $table->unique('identificador');
         });
     }
 

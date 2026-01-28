@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->string('nombre');
-            $table->integer('xml_id');
+            $table->integer('xml_id')->unique();
         });
     }
 

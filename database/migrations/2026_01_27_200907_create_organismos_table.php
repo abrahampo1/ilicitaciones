@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->timestamps();
 
-            $table->string('nombre')->nullable();
-            $table->string('identificador')->nullable();
+            $table->string('nombre')->nullable()->index();
+            $table->string('identificador')->nullable()->index();
 
             $table->string('direccion')->nullable();
             $table->string('codigo_postal')->nullable();

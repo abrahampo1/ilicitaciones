@@ -1,6 +1,8 @@
 @php
 
-    $latestDate = Carbon\Carbon::parse(App\Models\Licitacion::latest()->first()->fecha_actualizacion)->format('d/m/Y H:i')
+    $latestDate = 'Hasta el ' . Carbon\Carbon::parse(App\Models\Licitacion::latest()->first()->fecha_actualizacion)->format('d/m/Y H:i');
+    $totalLicitaciones = number_format(App\Models\Licitacion::sum('importe_total'), 2, ',', '.') . '€' ?? '--';
+    $conteoLicitaciones = App\Models\Licitacion::count();
 
 @endphp
 
@@ -10,24 +12,9 @@
 @section('contenido')
 
     <div class="flex items-center gap-4">
-        <div class="bg-neutral-800 p-4 border border-neutral-700 rounded-xl">
-            <p class="text-xs font-thin">Total de Dinero Público gastado</p>
-            <hr class="border-neutral-700">
-            <p class="text-lg pt-2">{{ number_format(App\Models\Licitacion::sum('importe_total'), 2, ',', '.') ?? '--' }}€
-            </p>
-            <p class="text-xs pt-2">Hasta el
-                {{ $latestDate }}
-            </p>
-        </div>
-        <div class="bg-neutral-800 p-4 border border-neutral-700 rounded-xl">
-            <p class="text-xs font-thin">Licitaciones Totales</p>
-            <hr class="border-neutral-700">
-            <p class="text-lg pt-2">{{ App\Models\Licitacion::count() }}
-            </p>
-            <p class="text-xs pt-2">Hasta el
-                {{ $latestDate }}
-            </p>
-        </div>
+        <x-card :titulo="'Total de Dinero Invertido'" :descripcion="$latestDate" :valor="$totalLicitaciones" />
+        <x-card :titulo="'Licitaciones Totales'" :descripcion="$latestDate" :valor="$conteoLicitaciones" />
+
 
     </div>
 

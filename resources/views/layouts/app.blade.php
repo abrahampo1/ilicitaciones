@@ -40,6 +40,7 @@
     
     @stack('styles')
     @stack('json-ld')
+</head>
 
 <body class="bg-neutral-900 font-serif">
     <div class="w-full h-full text-neutral-100 rounded-xl p-4">

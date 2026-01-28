@@ -7,12 +7,12 @@
     @push('json-ld')
     <script type="application/ld+json">
     {
-      "@context": "https://schema.org",
-      "@type": "GovernmentService",
+      "@@context": "https://schema.org",
+      "@@type": "GovernmentService",
       "name": "{{ str_replace('"', '\"', $licitacion->titulo) }}",
       "description": "{{ str_replace('"', '\"', Str::limit(strip_tags($licitacion->descripcion), 150)) }}",
       "provider": {
-        "@type": "GovernmentOrganization",
+        "@@type": "GovernmentOrganization",
         "name": "{{ str_replace('"', '\"', $licitacion->organismo->nombre ?? 'Organismo Público') }}"
       },
       "datePublished": "{{ $licitacion->created_at }}",
@@ -37,11 +37,15 @@
             <div class="relative">
                 <!-- Estado Badge -->
                 <div class="mb-4">
-                    <span class="px-3 py-1.5 text-xs rounded-full font-medium
-                        @if($licitacion->estado == 'Adjudicada') bg-emerald-500/20 text-emerald-400 border border-emerald-500/30
-                        @elseif($licitacion->estado == 'Evaluación') bg-amber-500/20 text-amber-400 border border-amber-500/30
-                        @elseif($licitacion->estado == 'Publicada') bg-sky-500/20 text-sky-400 border border-sky-500/30
-                        @else bg-neutral-500/20 text-neutral-400 border border-neutral-500/30 @endif">
+@php
+                        $estadoClass = match($licitacion->estado) {
+                            'Adjudicada' => 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+                            'Evaluación' => 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+                            'Publicada' => 'bg-sky-500/20 text-sky-400 border border-sky-500/30',
+                            default => 'bg-neutral-500/20 text-neutral-400 border border-neutral-500/30',
+                        };
+                    @endphp
+                    <span class="px-3 py-1.5 text-xs rounded-full font-medium {{ $estadoClass }}">
                         {{ $licitacion->estado ?? 'Sin estado' }}
                     </span>
                 </div>

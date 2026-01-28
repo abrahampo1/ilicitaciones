@@ -11,7 +11,7 @@ Route::get('/', function () {
         // Queries simples sin agregaciones pesadas
         return [
             'latestDate' => Licitacion::orderByDesc('fecha_actualizacion')->value('fecha_actualizacion'),
-            'totalImporte' => 0, // Se calculará en background
+            'totalImporte' => Licitacion::sum('importe_total'),
             'conteoLicitaciones' => Licitacion::count(),
             'totalOrganismos' => Organismo::count(),
             'totalEmpresas' => Empresa::count(),

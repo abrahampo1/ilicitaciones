@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('contenido')
+    @section('meta_title', $empresa->nombre . ' - Adjudicaciones - I-Licitaciones')
+    @section('meta_description', 'Adjudicaciones y contratos de ' . $empresa->nombre . '. Historial de licitaciones ganadas e importes totales.')
+
     <div class="max-w-5xl">
         <!-- Back navigation -->
         <a href="{{ route('empresas') }}" 

@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('contenido')
+    @section('meta_title', 'I-Licitaciones | Inteligencia de Mercado Público')
+    @section('meta_description', 'Panel de inteligencia de licitaciones. Analiza adjudicaciones, organismos y empresas del sector público en tiempo real.')
+
     <!-- Hero Stats Section -->
     <div class="relative mb-12">
         <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent rounded-3xl blur-3xl"></div>

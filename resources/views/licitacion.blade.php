@@ -1,6 +1,26 @@
 @extends('layouts.app')
 
 @section('contenido')
+    @section('meta_title', Str::limit($licitacion->titulo, 60) . ' - I-Licitaciones')
+    @section('meta_description', Str::limit(strip_tags($licitacion->descripcion ?? 'Detalles de la licitación ' . $licitacion->titulo), 155))
+    
+    @push('json-ld')
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "GovernmentService",
+      "name": "{{ str_replace('"', '\"', $licitacion->titulo) }}",
+      "description": "{{ str_replace('"', '\"', Str::limit(strip_tags($licitacion->descripcion), 150)) }}",
+      "provider": {
+        "@type": "GovernmentOrganization",
+        "name": "{{ str_replace('"', '\"', $licitacion->organismo->nombre ?? 'Organismo Público') }}"
+      },
+      "datePublished": "{{ $licitacion->created_at }}",
+      "dateModified": "{{ $licitacion->updated_at }}"
+    }
+    </script>
+    @endpush
+
     <div class="flex gap-8">
         <!-- Left Column - Licitación Details -->
         <div class="flex-1 min-w-0">

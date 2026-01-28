@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('contenido')
+    @section('meta_title', $organismo->nombre . ' - Licitaciones y Contratos - I-Licitaciones')
+    @section('meta_description', 'Licitaciones y contratos de ' . $organismo->nombre . '. Consulte presupuesto, adjudicaciones y estadísticas del organismo.')
+
     <div class="max-w-5xl">
         <!-- Back navigation -->
         <a href="{{ route('organismos') }}"

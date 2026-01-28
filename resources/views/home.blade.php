@@ -8,28 +8,28 @@
     <div class="relative mb-12">
         <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent rounded-3xl blur-3xl"></div>
         <div class="relative">
-            <p class="text-neutral-500 text-sm mb-2">Hasta el {{ $stats['latestDate'] ? \Carbon\Carbon::parse($stats['latestDate'])->format('d/m/Y H:i') : 'N/A' }}</p>
-            <h2 class="text-4xl md:text-5xl font-light mb-8 bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent">
+            <p class="text-neutral-500 text-xs md:text-sm mb-2">Hasta el {{ $stats['latestDate'] ? \Carbon\Carbon::parse($stats['latestDate'])->format('d/m/Y H:i') : 'N/A' }}</p>
+            <h2 class="text-3xl md:text-5xl font-light mb-8 bg-gradient-to-r from-neutral-100 to-neutral-400 bg-clip-text text-transparent">
                 Panel de Licitaciones
             </h2>
             
             <!-- Stats Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <div class="group p-6 bg-gradient-to-br from-neutral-800/80 to-neutral-900 border border-neutral-700/50 rounded-2xl hover:border-emerald-500/30 transition-all duration-300">
                     <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Licitaciones</p>
-                    <p class="text-3xl font-mono text-emerald-400">{{ number_format($stats['conteoLicitaciones'], 0, ',', '.') }}</p>
+                    <p class="text-2xl md:text-3xl font-mono text-emerald-400">{{ number_format($stats['conteoLicitaciones'], 0, ',', '.') }}</p>
                 </div>
                 <div class="group p-6 bg-gradient-to-br from-neutral-800/80 to-neutral-900 border border-neutral-700/50 rounded-2xl hover:border-teal-500/30 transition-all duration-300">
                     <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Volumen Total</p>
-                    <p class="text-2xl font-mono text-teal-400">{{ number_format($stats['totalImporte'], 2, ',', '.') }}€</p>
+                    <p class="text-xl md:text-2xl font-mono text-teal-400">{{ number_format($stats['totalImporte'], 2, ',', '.') }}€</p>
                 </div>
                 <div class="group p-6 bg-gradient-to-br from-neutral-800/80 to-neutral-900 border border-neutral-700/50 rounded-2xl hover:border-cyan-500/30 transition-all duration-300">
                     <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Organismos</p>
-                    <p class="text-3xl font-mono text-cyan-400">{{ number_format($stats['totalOrganismos'], 0, ',', '.') }}</p>
+                    <p class="text-2xl md:text-3xl font-mono text-cyan-400">{{ number_format($stats['totalOrganismos'], 0, ',', '.') }}</p>
                 </div>
                 <div class="group p-6 bg-gradient-to-br from-neutral-800/80 to-neutral-900 border border-neutral-700/50 rounded-2xl hover:border-sky-500/30 transition-all duration-300">
                     <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Empresas</p>
-                    <p class="text-3xl font-mono text-sky-400">{{ number_format($stats['totalEmpresas'], 0, ',', '.') }}</p>
+                    <p class="text-2xl md:text-3xl font-mono text-sky-400">{{ number_format($stats['totalEmpresas'], 0, ',', '.') }}</p>
                 </div>
             </div>
         </div>

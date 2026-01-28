@@ -21,7 +21,7 @@
     </script>
     @endpush
 
-    <div class="flex gap-8">
+    <div class="flex flex-col lg:flex-row gap-8">
         <!-- Left Column - Licitación Details -->
         <div class="flex-1 min-w-0">
         <!-- Back navigation -->
@@ -210,7 +210,7 @@
 
         <!-- Right Column - Raw Data (datos_raiz) -->
         <div class="flex-1 min-w-0">
-            <div class="sticky top-8">
+            <div class="lg:sticky lg:top-8">
                 @if($licitacion->datos_raiz)
                     <!-- Toggle Header -->
                     <button onclick="toggleJsonPanel()" 

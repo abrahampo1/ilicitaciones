@@ -86,7 +86,7 @@
             $licitaciones = $organismo->licitaciones()->latest('fecha_actualizacion')->limit(20)->get();
         @endphp
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
             <div class="relative group">
                 <div
                     class="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity">

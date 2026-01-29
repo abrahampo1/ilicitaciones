@@ -72,13 +72,14 @@ Route::get('/organismos', function (\Illuminate\Http\Request $request) {
         $query->where('nombre', 'like', "%{$search}%");
     }
 
-    $organismos = $query
-        ->select('organismos.*')
-        ->withCount('licitaciones')
-        ->withSum('licitaciones as total_importe', 'importe_total')
-        ->orderByDesc('total_importe')
-        ->paginate(15)
-        ->withQueryString();
+    $organismos = cache()->remember('organismos_page_' . request('page', 1) . '_search_' . ($search ?? ''), 3600, function () use ($query) {
+        return $query
+            ->select('organismos.*')
+            ->withCount('licitaciones')
+            ->withSum('licitaciones as total_importe', 'importe_total')
+            ->orderByDesc('total_importe')
+            ->paginate(15);
+    });
 
     // Cache stats for performance
     $totalOrganismos = cache()->remember('organismos_count', 3600, fn() => Organismo::count());

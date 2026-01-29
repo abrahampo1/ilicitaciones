@@ -68,16 +68,15 @@ Route::get('/licitacion/{id}', function () {
 Route::get('/organismos', function (\Illuminate\Http\Request $request) {
     $query = Organismo::query();
 
-    $organismos = \Illuminate\Support\Facades\DB::table('organismos')
-        ->leftJoin('licitacions', 'organismos.id', '=', 'licitacions.organismo_id')
-        ->select(
-            'organismos.*',
-            \Illuminate\Support\Facades\DB::raw('COUNT(licitacions.id) as licitaciones_count '),
-        )
-        ->when($request->input('search'), function ($q, $search) {
-            $q->where('organismos.nombre', 'like', "%{$search}%");
-        })
-        ->groupBy('organismos.id', 'organismos.nombre')
+    if ($search = $request->input('search')) {
+        $query->where('nombre', 'like', "%{$search}%");
+    }
+
+    $organismos = $query
+        ->select('organismos.*')
+        ->withCount('licitaciones')
+        ->withSum('licitaciones as total_importe', 'importe_total')
+        ->orderByDesc('total_importe')
         ->paginate(15)
         ->withQueryString();
 

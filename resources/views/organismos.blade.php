@@ -70,7 +70,7 @@
                     </div>
                     <div class="text-right shrink-0">
                         <p class="font-mono text-emerald-400 group-hover:text-emerald-300 transition-colors">
-                            {{ number_format($organismo->licitaciones_sum_importe_total ?? 0, 0, ',', '.') }}€
+                            {{ number_format($organismo->total_importe ?? 0, 0, ',', '.') }}€
                         </p>
                         <p class="text-xs text-neutral-500 mt-1">{{ $organismo->licitaciones_count }} licit.</p>
                     </div>

@@ -116,7 +116,7 @@
                 <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl group-hover:border-teal-500/30 transition-colors">
                     <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Sin Impuestos</p>
                     <p class="text-2xl font-mono text-teal-400">
-                        {{ $licitacion->importe_total ? number_format($licitacion->importe_total, 2, ',', '.') . '€' : '--' }}
+                        {{ $licitacion->importe_total ? number_format($licitacion->importe_final, 2, ',', '.') . '€' : '--' }}
                     </p>
                 </div>
             </div>
@@ -125,7 +125,7 @@
                 <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl group-hover:border-emerald-500/30 transition-colors">
                     <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Importe Total</p>
                     <p class="text-2xl font-mono text-emerald-400">
-                        {{ $licitacion->importe_final ? number_format($licitacion->importe_final, 2, ',', '.') . '€' : '--' }}
+                        {{ $licitacion->importe_final ? number_format($licitacion->importe_total, 2, ',', '.') . '€' : '--' }}
                     </p>
                 </div>
             </div>

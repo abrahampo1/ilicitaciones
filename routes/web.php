@@ -110,7 +110,7 @@ Route::get('/empresas', function (\Illuminate\Http\Request $request) {
     }
 
     $empresas = $query->orderByDesc('total_importe')
-        ->paginate(30)
+        ->paginate(15)
         ->withQueryString();
 
     // Stats cache

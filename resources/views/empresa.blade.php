@@ -181,15 +181,6 @@
                         <p class="text-neutral-500 text-sm text-center py-4">Sin datos anuales</p>
                     @endif
                 </div>
-
-                <!-- Help Widget (Optional) -->
-                <div class="bg-gradient-to-b from-neutral-800/20 to-neutral-900/20 border border-neutral-800 rounded-2xl p-6 text-center">
-                    <p class="text-xs text-neutral-500 mb-2">¿Datos incorrectos?</p>
-                    <a href="#" class="text-xs text-neutral-400 hover:text-white underline decoration-neutral-700 hover:decoration-white transition-all">
-                        Reportar información
-                    </a>
-                </div>
-
             </div>
         </div>
     </div>

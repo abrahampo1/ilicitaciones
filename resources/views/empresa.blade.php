@@ -220,6 +220,10 @@
                             </a>
                         </div>
                     @endforeach
+                    
+                    @if ($relatedCompanies->isEmpty())
+                        <p class="text-center italic text-xs">No hay empresas relacionadas</p>
+                    @endif
                 </div>
             </div>
         </div>

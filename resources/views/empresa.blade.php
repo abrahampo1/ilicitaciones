@@ -181,6 +181,31 @@
                         <p class="text-neutral-500 text-sm text-center py-4">Sin datos anuales</p>
                     @endif
                 </div>
+
+                <!-- Related Companies -->
+                <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6">
+                    <h3 class="flex items-center gap-2 text-neutral-300 text-sm font-medium mb-2">
+                        Empresas Relacionadas
+                    </h3>
+                    <p class="text-xs text-neutral-500 mb-6">
+                        Tienen el mismo identificador pero distinto nombre.
+                    </p>
+                    
+                   @php
+                   $relatedCompanies = App\Models\Empresa::where('identificador', $empresa->identificador)->get();
+                   @endphp
+
+                   @foreach($relatedCompanies as $relatedCompany)
+                    <div class="flex items-center gap-2 p-1 px-2 mt-2 border border-neutral-800 rounded-lg hover:bg-neutral-800 transition-colors">
+                        <a href="{{ route('empresa.show', $relatedCompany->id) }}" class="flex items-center gap-2">
+                            <div>
+                                <p class="font-medium text-neutral-200">{{ $relatedCompany->nombre }}</p>
+                                <p class="text-xs text-neutral-400">{{ $relatedCompany->identificador }}</p>
+                            </div>
+                        </a>
+                    </div>
+                   @endforeach
+                </div>
             </div>
         </div>
     </div>

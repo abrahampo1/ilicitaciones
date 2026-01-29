@@ -14,7 +14,7 @@ use Noki\XmlConverter\Convert;
 
 class ImportarLicitaciones extends Command
 {
-    protected $signature = 'app:importar-licitaciones {--batch-size=500 : Tamaño del batch para inserciones} {--all : Importar todas las licitaciones} {--from-year : Importar a partir de x año}';
+    protected $signature = 'app:importar-licitaciones {--batch-size=500 : Tamaño del batch para inserciones} {--all : Importar todas las licitaciones} {--from-year=2012 : Importar a partir de x año}';
     protected $description = 'Importar licitaciones desde una fuente externa (optimizado)';
 
     // Cachés en memoria para evitar consultas repetidas

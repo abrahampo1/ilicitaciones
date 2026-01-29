@@ -1,12 +1,4 @@
-@php
-    $organismos = App\Models\Organismo::withCount('licitaciones')
-        ->withSum('licitaciones', 'importe_total')
-        ->orderByDesc('licitaciones_sum_importe_total')
-        ->paginate(30);
-    
-    $totalOrganismos = App\Models\Organismo::count();
-    $totalVolumen = App\Models\Licitacion::sum('importe_total');
-@endphp
+
 
 @extends('layouts.app')
 
@@ -20,7 +12,6 @@
             </h2>
             <p class="text-neutral-500 mb-6">Instituciones y entidades contratantes</p>
             
-            <!-- Stats -->
             <div class="flex flex-wrap gap-4 mb-8">
                 <div class="px-5 py-3 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl">
                     <span class="text-neutral-500 text-xs uppercase tracking-wider">Total Organismos</span>
@@ -31,6 +22,33 @@
                     <p class="text-2xl font-mono text-emerald-400">{{ number_format($totalVolumen, 0, ',', '.') }}€</p>
                 </div>
             </div>
+
+            <!-- Search Form -->
+            <form action="{{ route('organismos') }}" method="GET" class="max-w-lg">
+                <div class="relative group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-xl opacity-20 group-hover:opacity-40 transition duration-200 blur"></div>
+                    <div class="relative flex items-center bg-neutral-900 rounded-xl">
+                        <div class="pl-4 text-neutral-500">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="search" 
+                               value="{{ request('search') }}"
+                               placeholder="Buscar organismo por nombre..." 
+                               class="w-full bg-transparent border-none focus:ring-0 text-neutral-200 placeholder-neutral-500 py-3 pl-3 pr-4"
+                        >
+                        @if(request('search'))
+                            <a href="{{ route('organismos') }}" class="pr-4 text-neutral-500 hover:text-neutral-300 transition-colors">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 

@@ -65,8 +65,24 @@ Route::get('/licitacion/{id}', function () {
 })->name('licitacion.show');
 
 // Organismos
-Route::get('/organismos', function () {
-    return view('organismos');
+Route::get('/organismos', function (\Illuminate\Http\Request $request) {
+    $query = Organismo::query();
+
+    if ($search = $request->input('search')) {
+        $query->where('nombre', 'like', "%{$search}%");
+    }
+
+    $organismos = $query->withCount('licitaciones')
+        ->withSum('licitaciones', 'importe_total')
+        ->orderByDesc('licitaciones_sum_importe_total')
+        ->paginate(15)
+        ->withQueryString();
+    
+    // Cache stats for performance
+    $totalOrganismos = cache()->remember('organismos_count', 3600, fn() => Organismo::count());
+    $totalVolumen = cache()->remember('licitaciones_sum_total', 3600, fn() => Licitacion::sum('importe_total'));
+
+    return view('organismos', compact('organismos', 'totalOrganismos', 'totalVolumen'));
 })->name('organismos');
 
 Route::get('/organismo/{id}', function ($id) {
@@ -76,8 +92,31 @@ Route::get('/organismo/{id}', function ($id) {
 })->name('organismo.show');
 
 // Empresas
-Route::get('/empresas', function () {
-    return view('empresas');
+Route::get('/empresas', function (\Illuminate\Http\Request $request) {
+    $query = \Illuminate\Support\Facades\DB::table('adjudicacions')
+        ->join('empresas', 'adjudicacions.empresa_id', '=', 'empresas.id')
+        ->select(
+            'empresas.id',
+            'empresas.nombre',
+            'empresas.identificador',
+            \Illuminate\Support\Facades\DB::raw('SUM(adjudicacions.importe) as total_importe'),
+            \Illuminate\Support\Facades\DB::raw('COUNT(adjudicacions.id) as total_adjudicaciones')
+        )
+        ->groupBy('empresas.id', 'empresas.nombre', 'empresas.identificador');
+
+    if ($search = $request->input('search')) {
+        $query->where('empresas.nombre', 'like', "%{$search}%");
+    }
+
+    $empresas = $query->orderByDesc('total_importe')
+        ->paginate(30)
+        ->withQueryString();
+
+    // Stats cache
+    $totalVolumen = cache()->remember('adjudicaciones_sum_total', 3600, fn() => \App\Models\Adjudicacion::sum('importe'));
+    $totalEmpresas = cache()->remember('empresas_count', 3600, fn() => Empresa::count());
+
+    return view('empresas', compact('empresas', 'totalVolumen', 'totalEmpresas'));
 })->name('empresas');
 
 Route::get('/empresa/{id}', function ($id) {

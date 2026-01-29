@@ -112,9 +112,11 @@ Route::get('/empresas', function (\Illuminate\Http\Request $request) {
         $query->orWhere('empresas.identificador', 'like', "%{$search}%");
     }
 
-    $empresas = $query->orderByDesc('total_importe')
-        ->paginate(15)
-        ->withQueryString();
+    $empresas = cache()->remember('empresas_page_' . request('page', 1) . '_search_' . ($search ?? ''), 3600, function () use ($query) {
+        return $query->orderByDesc('total_importe')
+            ->paginate(15)
+            ->withQueryString();
+    });
 
     // Stats cache
     $totalVolumen = cache()->remember('adjudicaciones_sum_total', 3600, fn() => \App\Models\Adjudicacion::sum('importe'));

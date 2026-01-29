@@ -77,7 +77,7 @@ Route::get('/organismos', function (\Illuminate\Http\Request $request) {
         ->orderByDesc('licitaciones_sum_importe_total')
         ->paginate(15)
         ->withQueryString();
-    
+
     // Cache stats for performance
     $totalOrganismos = cache()->remember('organismos_count', 3600, fn() => Organismo::count());
     $totalVolumen = cache()->remember('licitaciones_sum_total', 3600, fn() => Licitacion::sum('importe_total'));
@@ -106,6 +106,7 @@ Route::get('/empresas', function (\Illuminate\Http\Request $request) {
 
     if ($search = $request->input('search')) {
         $query->where('empresas.nombre', 'like', "%{$search}%");
+        $query->orWhere('empresas.identificador', 'like', "%{$search}%");
     }
 
     $empresas = $query->orderByDesc('total_importe')

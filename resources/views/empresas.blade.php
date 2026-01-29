@@ -36,7 +36,7 @@
                         <input type="text" 
                                name="search" 
                                value="{{ request('search') }}"
-                               placeholder="Buscar empresa por nombre..." 
+                               placeholder="Buscar empresa por nombre o identificador..." 
                                class="w-full bg-transparent border-none focus:ring-0 text-neutral-200 placeholder-neutral-500 py-3 pl-3 pr-4"
                         >
                         @if(request('search'))

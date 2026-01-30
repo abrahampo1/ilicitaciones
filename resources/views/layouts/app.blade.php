@@ -39,7 +39,7 @@
     @stack('json-ld')
 </head>
 
-<body class="bg-neutral-900 font-serif">
+<body class="bg-neutral-900 text-neutral-100 font-serif">
     {{-- Skip link para accesibilidad --}}
     <a href="#contenido-principal" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-neutral-100 focus:text-neutral-900 focus:px-4 focus:py-2 focus:rounded">
         Saltar al contenido principal

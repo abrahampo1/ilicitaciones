@@ -58,9 +58,9 @@
             </div>
             <div class="relative bg-neutral-900/90 backdrop-blur border border-neutral-700/50 rounded-2xl p-6">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-light">
+                    <h2 class="text-xl font-light">
                         <span class="text-emerald-400">⬥</span> Top 10 Empresas
-                    </h3>
+                    </h2>
                     <a href="{{ route('empresas') }}"
                         class="text-xs text-neutral-400 hover:text-emerald-400 transition-colors">
                         Ver todas →
@@ -93,9 +93,9 @@
             </div>
             <div class="relative bg-neutral-900/90 backdrop-blur border border-neutral-700/50 rounded-2xl p-6">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-light">
+                    <h2 class="text-xl font-light">
                         <span class="text-cyan-400">⬥</span> Top 10 Organismos
-                    </h3>
+                    </h2>
                     <a href="{{ route('organismos') }}"
                         class="text-xs text-neutral-400 hover:text-cyan-400 transition-colors">
                         Ver todos →
@@ -125,9 +125,9 @@
     <!-- Recent Licitaciones -->
     <div class="mt-12">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-light">
+            <h2 class="text-xl font-light">
                 <span class="text-neutral-400">◈</span> Últimas Licitaciones
-            </h3>
+            </h2>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

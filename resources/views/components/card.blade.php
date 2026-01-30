@@ -1,13 +1,12 @@
 @props(['titulo', 'valor', 'descripcion'])
 
-<div class="bg-neutral-800 p-4 border border-neutral-700 rounded-xl">
-    <p class="text-xs font-thin">{{ $titulo }}</p>
+<article class="bg-neutral-800 p-4 border border-neutral-700 rounded-xl">
+    <p class="text-xs text-neutral-300">{{ $titulo }}</p>
     <hr class="border-neutral-700">
-    <p class="text-lg pt-2">{{ $valor }}</p>
+    <p class="text-lg pt-2 text-neutral-100">{{ $valor }}</p>
     @if (isset($descripcion))
-        <p class="text-xs mt-2">
+        <p class="text-xs mt-2 text-neutral-300">
             {{ $descripcion }}
         </p>
-
     @endif
-</div>
+</article>

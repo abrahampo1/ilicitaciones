@@ -7,7 +7,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Back navigation -->
         <a href="{{ route('organismos') }}"
-            class="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-200 transition-colors mb-8 group">
+            class="inline-flex items-center gap-2 text-neutral-400 hover:text-neutral-200 transition-colors mb-8 group">
             <span class="group-hover:-translate-x-1 transition-transform">←</span>
             <span class="text-sm">Volver a organismos</span>
         </a>
@@ -23,11 +23,11 @@
                 </h1>
                 <div class="flex flex-wrap items-center gap-4 text-sm">
                     @if($organismo->identificador)
-                        <span class="font-mono text-neutral-500 bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-800">
+                        <span class="font-mono text-neutral-400 bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-800">
                             ID: {{ $organismo->identificador }}
                         </span>
                     @endif
-                    <span class="font-mono text-neutral-500">
+                    <span class="font-mono text-neutral-400">
                         #{{ $organismo->id }}
                     </span>
                 </div>
@@ -96,7 +96,7 @@
                                     </p>
                                 @endif
                                 @if($organismo->contacto_fax)
-                                    <p class="text-neutral-500 text-sm flex items-center gap-2">
+                                    <p class="text-neutral-400 text-sm flex items-center gap-2">
                                         <span>📠</span> {{ $organismo->contacto_fax }}
                                     </p>
                                 @endif
@@ -121,7 +121,7 @@
                 <!-- Últimas Licitaciones -->
                 <div>
                     <h2 class="flex items-center gap-3 text-xl font-light mb-6 text-neutral-200">
-                        <span class="text-neutral-600">◈</span>
+                        <span class="text-neutral-400">◈</span>
                         Últimas Licitaciones
                     </h2>
 
@@ -145,7 +145,7 @@
 
                                     <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs">
                                         @if($licitacion->fecha_actualizacion)
-                                            <span class="flex items-center gap-1.5 text-neutral-500">
+                                            <span class="flex items-center gap-1.5 text-neutral-400">
                                                 <span class="w-1 h-1 rounded-full bg-neutral-600"></span>
                                                 {{ Carbon\Carbon::parse($licitacion->fecha_actualizacion)->format('d/m/Y') }}
                                             </span>
@@ -166,7 +166,7 @@
                         </div>
                     @else
                         <div class="p-12 bg-neutral-900/30 border border-neutral-800 rounded-2xl text-center">
-                            <p class="text-neutral-500">No hay licitaciones registradas para este organismo.</p>
+                            <p class="text-neutral-400">No hay licitaciones registradas para este organismo.</p>
                         </div>
                     @endif
                 </div>
@@ -180,7 +180,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
                     <div class="relative group bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                        <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2 font-medium">Licitaciones</p>
+                        <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2 font-medium">Licitaciones</p>
                         <p class="text-4xl font-mono text-cyan-400 font-light tracking-tight">
                             {{ number_format($totalLicitaciones, 0, ',', '.') }}
                         </p>
@@ -188,7 +188,7 @@
 
                     <div class="relative group bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                        <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2 font-medium">Volumen Total</p>
+                        <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2 font-medium">Volumen Total</p>
                         <p class="text-3xl font-mono text-emerald-400 font-light tracking-tight truncate" title="{{ number_format($totalImporte, 2, ',', '.') }}€">
                             {{ number_format($totalImporte, 0, ',', '.') }}€
                         </p>
@@ -220,7 +220,7 @@
                             @endforeach
                         </div>
                     @else
-                        <p class="text-neutral-500 text-sm text-center py-4">Sin datos anuales</p>
+                        <p class="text-neutral-400 text-sm text-center py-4">Sin datos anuales</p>
                     @endif
                 </div>
 

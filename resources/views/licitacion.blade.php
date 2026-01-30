@@ -33,7 +33,7 @@
         <div class="flex-1 min-w-0">
         <!-- Back navigation -->
         <a href="{{ url()->previous() }}" 
-           class="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-200 transition-colors mb-6 group">
+           class="inline-flex items-center gap-2 text-neutral-400 hover:text-neutral-200 transition-colors mb-6 group">
             <span class="group-hover:-translate-x-1 transition-transform">←</span>
             <span class="text-sm">Volver</span>
         </a>
@@ -88,7 +88,7 @@
                 
                 <!-- Identificador y Organismo -->
                 <div class="flex flex-wrap items-center gap-4 text-sm">
-                    <span class="font-mono text-neutral-500">{{ $licitacion->identificador }}</span>
+                    <span class="font-mono text-neutral-400">{{ $licitacion->identificador }}</span>
                     @if($licitacion->organismo)
                         <span class="text-neutral-700">•</span>
                         <a href="{{ route('organismo.show', $licitacion->organismo->id) }}" 
@@ -105,7 +105,7 @@
             <div class="relative group">
                 <div class="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl group-hover:border-amber-500/30 transition-colors">
-                    <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Presupuesto Base</p>
+                    <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2">Presupuesto Base</p>
                     <p class="text-2xl font-mono text-amber-400">
                         {{ $licitacion->importe_estimado ? number_format($licitacion->importe_estimado, 2, ',', '.') . '€' : '--' }}
                     </p>
@@ -114,7 +114,7 @@
             <div class="relative group">
                 <div class="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl group-hover:border-teal-500/30 transition-colors">
-                    <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Sin Impuestos</p>
+                    <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2">Sin Impuestos</p>
                     <p class="text-2xl font-mono text-teal-400">
                         {{ $licitacion->importe_total ? number_format($licitacion->importe_final, 2, ',', '.') . '€' : '--' }}
                     </p>
@@ -123,7 +123,7 @@
             <div class="relative group">
                 <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl group-hover:border-emerald-500/30 transition-colors">
-                    <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2">Importe Total</p>
+                    <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2">Importe Total</p>
                     <p class="text-2xl font-mono text-emerald-400">
                         {{ $licitacion->importe_final ? number_format($licitacion->importe_total, 2, ',', '.') . '€' : '--' }}
                     </p>
@@ -137,14 +137,14 @@
                 @if($licitacion->fecha_contratacion)
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                        <span class="text-neutral-500">Contratación:</span>
+                        <span class="text-neutral-400">Contratación:</span>
                         <span class="text-neutral-300">{{ Carbon\Carbon::parse($licitacion->fecha_contratacion)->format('d/m/Y') }}</span>
                     </div>
                 @endif
                 @if($licitacion->fecha_actualizacion)
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-neutral-500"></span>
-                        <span class="text-neutral-500">Actualización:</span>
+                        <span class="text-neutral-400">Actualización:</span>
                         <span class="text-neutral-300">{{ Carbon\Carbon::parse($licitacion->fecha_actualizacion)->format('d/m/Y H:i') }}</span>
                     </div>
                 @endif
@@ -155,7 +155,7 @@
         @if ($licitacion->descripcion)
             <div class="mb-8">
                 <h2 class="text-lg font-light mb-4 text-neutral-300">
-                    <span class="text-neutral-600">◈</span> Descripción
+                    <span class="text-neutral-400">◈</span> Descripción
                 </h2>
                 <div class="p-6 bg-neutral-800/30 border border-neutral-700/30 rounded-2xl">
                     <p class="text-neutral-300 leading-relaxed whitespace-pre-line">{{ $licitacion->descripcion }}</p>
@@ -181,7 +181,7 @@
                                             {{ $empresa->nombre }}
                                         </p>
                                         @if($empresa->identificador)
-                                            <p class="text-xs font-mono text-neutral-500 mt-1">{{ $empresa->identificador }}</p>
+                                            <p class="text-xs font-mono text-neutral-400 mt-1">{{ $empresa->identificador }}</p>
                                         @endif
                                     </div>
                                     <div class="text-right shrink-0">
@@ -189,7 +189,7 @@
                                             {{ number_format($empresa->pivot->importe, 2, ',', '.') }}€
                                         </p>
                                         @if($empresa->pivot->importe_final && $empresa->pivot->importe_final != $empresa->pivot->importe)
-                                            <p class="text-xs text-neutral-500 mt-1">
+                                            <p class="text-xs text-neutral-400 mt-1">
                                                 Final: {{ number_format($empresa->pivot->importe_final, 2, ',', '.') }}€
                                             </p>
                                         @endif
@@ -225,7 +225,7 @@
                 </div>
             @else
                 <div class="p-8 bg-neutral-800/30 border border-neutral-700/30 rounded-2xl text-center">
-                    <p class="text-neutral-500">No hay adjudicaciones registradas para esta licitación</p>
+                    <p class="text-neutral-400">No hay adjudicaciones registradas para esta licitación</p>
                 </div>
             @endif
         </div>
@@ -233,7 +233,7 @@
         <!-- Categoría si existe -->
         @if($licitacion->categoria)
             <div class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-800/50 rounded-full text-sm">
-                <span class="text-neutral-500">Categoría:</span>
+                <span class="text-neutral-400">Categoría:</span>
                 <span class="text-neutral-300">{{ $licitacion->categoria->nombre }}</span>
             </div>
         @endif
@@ -383,10 +383,10 @@
                                         <div class="flex items-center gap-4 overflow-hidden">
                                             <div class="min-w-0">
                                                 <p class="text-sm font-medium text-neutral-200 group-hover:text-white truncate transition-colors">{{ $doc['name'] }}</p>
-                                                <p class="text-xs text-neutral-500 truncate">{{ $doc['label'] }}</p>
+                                                <p class="text-xs text-neutral-400 truncate">{{ $doc['label'] }}</p>
                                             </div>
                                         </div>
-                                        <span class="text-neutral-600 group-hover:text-sky-400 transition-colors">
+                                        <span class="text-neutral-400 group-hover:text-sky-400 transition-colors">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                             </svg>
@@ -401,7 +401,7 @@
                     <div class="mb-6 grid grid-cols-1 gap-4">
                         @if($location)
                             <div class="p-5 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl">
-                                <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <p class="text-xs text-neutral-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-neutral-400">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
@@ -414,7 +414,7 @@
 
                         @if($deadline || $contact)
                             <div class="p-5 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl">
-                                <p class="text-xs text-neutral-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <p class="text-xs text-neutral-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-neutral-400">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -424,7 +424,7 @@
                                 <div class="space-y-4">
                                     @if($deadline)
                                         <div>
-                                            <p class="text-xs text-neutral-500 mb-1">Fecha Límite Presentación</p>
+                                            <p class="text-xs text-neutral-400 mb-1">Fecha Límite Presentación</p>
                                             <div class="flex items-center gap-2">
                                                 <span class="text-amber-400 font-mono text-lg">
                                                     {{ Carbon\Carbon::parse($deadline['EndDate'])->format('d/m/Y') }}
@@ -436,7 +436,7 @@
                                                 @endif
                                             </div>
                                             @if(isset($deadline['Description']))
-                                                <p class="text-xs text-neutral-500 mt-1 leading-relaxed">{{ Str::limit($deadline['Description'], 100) }}</p>
+                                                <p class="text-xs text-neutral-400 mt-1 leading-relaxed">{{ Str::limit($deadline['Description'], 100) }}</p>
                                             @endif
                                         </div>
                                     @endif
@@ -467,7 +467,7 @@
 
                          @if($duration)
                             <div class="p-5 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl">
-                                <p class="text-xs text-neutral-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <p class="text-xs text-neutral-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-neutral-400">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -476,7 +476,7 @@
                                 <p class="text-lg font-mono text-neutral-200">{{ $duration }}</p>
                                 @if($extensions)
                                     <div class="mt-3 pt-3 border-t border-neutral-700/50 text-xs text-neutral-400">
-                                        <strong class="text-neutral-500">Prórrogas:</strong> {{ Str::limit($extensions, 150) }}
+                                        <strong class="text-neutral-400">Prórrogas:</strong> {{ Str::limit($extensions, 150) }}
                                     </div>
                                 @endif
                             </div>
@@ -484,7 +484,7 @@
                         
                         @if(count($criteria) > 0)
                             <div class="p-5 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl">
-                                <p class="text-xs text-neutral-500 uppercase tracking-wider mb-3">Criterios de Adjudicación</p>
+                                <p class="text-xs text-neutral-400 uppercase tracking-wider mb-3">Criterios de Adjudicación</p>
                                 <div class="space-y-3">
                                     @foreach($criteria as $crit)
                                         <div>
@@ -503,7 +503,7 @@
                         
                         @if($financialSolvency || count($technicalSolvency) > 0)
                              <div class="p-5 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl">
-                                <p class="text-xs text-neutral-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <p class="text-xs text-neutral-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-neutral-400">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
                                     </svg>
@@ -538,7 +538,7 @@
                             <h2 class="text-lg font-light text-neutral-300 flex items-center gap-2">
                                 <span class="text-purple-400">◇</span> 
                                 Datos Raw (JSON)
-                                <span class="text-xs text-neutral-500 font-normal">(clic para ver)</span>
+                                <span class="text-xs text-neutral-400 font-normal">(clic para ver)</span>
                             </h2>
                             <span id="jsonToggleIcon" class="text-purple-400 transition-transform duration-300">▶</span>
                         </div>
@@ -580,7 +580,7 @@
                     </div>
                 @else
                     <div class="p-8 bg-neutral-800/30 border border-neutral-700/30 rounded-2xl text-center">
-                        <p class="text-neutral-500">No hay datos raw disponibles para esta licitación</p>
+                        <p class="text-neutral-400">No hay datos raw disponibles para esta licitación</p>
                     </div>
                 @endif
             </div>

@@ -7,7 +7,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Back navigation -->
         <a href="{{ route('empresas') }}"
-            class="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-200 transition-colors mb-8 group">
+            class="inline-flex items-center gap-2 text-neutral-400 hover:text-neutral-200 transition-colors mb-8 group">
             <span class="group-hover:-translate-x-1 transition-transform">←</span>
             <span class="text-sm">Volver a empresas</span>
         </a>
@@ -24,11 +24,11 @@
                 <div class="flex flex-wrap items-center gap-4 text-sm">
                     @if($empresa->identificador)
                         <span
-                            class="font-mono text-neutral-500 bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-800">
+                            class="font-mono text-neutral-400 bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-800">
                             ID: {{ $empresa->identificador }}
                         </span>
                     @endif
-                    <span class="font-mono text-neutral-500">
+                    <span class="font-mono text-neutral-400">
                         #{{ $empresa->id }}
                     </span>
                 </div>
@@ -93,7 +93,7 @@
                                             {{ number_format($adj->importe, 0, ',', '.') }}€
                                         </p>
                                         @if($adj->importe_final && $adj->importe_final != $adj->importe)
-                                            <p class="text-xs text-neutral-500 mt-1">
+                                            <p class="text-xs text-neutral-400 mt-1">
                                                 Final: {{ number_format($adj->importe_final, 0, ',', '.') }}€
                                             </p>
                                         @endif
@@ -102,7 +102,7 @@
 
                                 <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs">
                                     @if($adj->fecha_adjudicacion)
-                                        <span class="flex items-center gap-1.5 text-neutral-500">
+                                        <span class="flex items-center gap-1.5 text-neutral-400">
                                             <span class="w-1 h-1 rounded-full bg-neutral-600"></span>
                                             {{ Carbon\Carbon::parse($adj->fecha_adjudicacion)->format('d/m/Y') }}
                                         </span>
@@ -125,7 +125,7 @@
                     </div>
                 @else
                     <div class="p-12 bg-neutral-900/30 border border-neutral-800 rounded-2xl text-center">
-                        <p class="text-neutral-500">No hay adjudicaciones registradas para esta empresa</p>
+                        <p class="text-neutral-400">No hay adjudicaciones registradas para esta empresa</p>
                     </div>
                 @endif
             </div>
@@ -138,7 +138,7 @@
                         <div
                             class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity">
                         </div>
-                        <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2 font-medium">Importe Total</p>
+                        <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2 font-medium">Importe Total</p>
                         <p class="text-3xl font-mono text-emerald-400 font-light tracking-tight truncate"
                             title="{{ number_format($totalImporte, 2, ',', '.') }}€">
                             {{ number_format($totalImporte, 0, ',', '.') }}€
@@ -149,7 +149,7 @@
                         <div
                             class="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity">
                         </div>
-                        <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2 font-medium">Adjudicaciones</p>
+                        <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2 font-medium">Adjudicaciones</p>
                         <p class="text-4xl font-mono text-sky-400 font-light tracking-tight">
                             {{ number_format($totalAdjudicaciones, 0, ',', '.') }}
                         </p>
@@ -159,7 +159,7 @@
                         <div
                             class="absolute inset-0 bg-gradient-to-br from-teal-500/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity">
                         </div>
-                        <p class="text-neutral-500 text-xs uppercase tracking-wider mb-2 font-medium">Importe Medio</p>
+                        <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2 font-medium">Importe Medio</p>
                         <p class="text-3xl font-mono text-teal-400 font-light tracking-tight truncate">
                             {{ number_format($importeMedio, 0, ',', '.') }}€
                         </p>
@@ -192,7 +192,7 @@
                             @endforeach
                         </div>
                     @else
-                        <p class="text-neutral-500 text-sm text-center py-4">Sin datos anuales</p>
+                        <p class="text-neutral-400 text-sm text-center py-4">Sin datos anuales</p>
                     @endif
                 </div>
 
@@ -201,7 +201,7 @@
                     <h3 class="flex items-center gap-2 text-neutral-300 text-sm font-medium mb-2">
                         Empresas Relacionadas
                     </h3>
-                    <p class="text-xs text-neutral-500 mb-6">
+                    <p class="text-xs text-neutral-400 mb-6">
                         Tienen el mismo identificador pero distinto nombre.
                     </p>
 

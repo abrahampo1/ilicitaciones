@@ -40,23 +40,29 @@
 </head>
 
 <body class="bg-neutral-900 font-serif">
+    {{-- Skip link para accesibilidad --}}
+    <a href="#contenido-principal" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-neutral-100 focus:text-neutral-900 focus:px-4 focus:py-2 focus:rounded">
+        Saltar al contenido principal
+    </a>
+
     <div class="w-full h-full text-neutral-100 rounded-xl p-4">
-        <div class="text-neutral-100 flex flex-col md:flex-row items-center justify-between gap-4">
-            <h1 class="italic text-xl">I-Licitaciones</h1>
-            <nav class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm">
+        <header class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <a href="{{ route('home') }}" class="italic text-xl hover:text-neutral-300 transition-colors">I-Licitaciones</a>
+            <nav aria-label="Navegación principal" class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm">
                 <a href="{{ route('home') }}"
-                    class="text-neutral-400 hover:text-neutral-100 transition-colors">Inicio</a>
+                    class="text-neutral-300 hover:text-neutral-100 transition-colors">Inicio</a>
                 <a href="{{ route('organismos') }}"
-                    class="text-neutral-400 hover:text-neutral-100 transition-colors">Organismos</a>
+                    class="text-neutral-300 hover:text-neutral-100 transition-colors">Organismos</a>
                 <a href="{{ route('empresas') }}"
-                    class="text-neutral-400 hover:text-neutral-100 transition-colors">Empresas</a>
-                <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank"
-                    class="text-neutral-400 hover:text-neutral-100 transition-colors">GitHub</a>
+                    class="text-neutral-300 hover:text-neutral-100 transition-colors">Empresas</a>
+                <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" rel="noopener noreferrer"
+                    class="text-neutral-300 hover:text-neutral-100 transition-colors">GitHub</a>
             </nav>
-        </div>
-        <div class="p-4">
+        </header>
+
+        <main id="contenido-principal" class="p-4">
             @yield('contenido')
-        </div>
+        </main>
     </div>
 </body>
 

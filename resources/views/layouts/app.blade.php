@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,7 @@
     <meta property="og:site_name" content="I-Licitaciones" />
     <meta property="og:locale" content="es_ES" />
     @hasSection('meta_image')
-    <meta property="og:image" content="@yield('meta_image')" />
+        <meta property="og:image" content="@yield('meta_image')" />
     @endif
 
     {{-- Twitter --}}
@@ -28,16 +29,12 @@
     <meta property="twitter:title" content="@yield('meta_title', 'I-Licitaciones - Buscador de Licitaciones del Estado')" />
     <meta property="twitter:description" content="@yield('meta_description', 'Plataforma avanzada para la búsqueda, visualización y análisis de licitaciones del sector público en España.')" />
     @hasSection('meta_image')
-    <meta property="twitter:image" content="@yield('meta_image')" />
+        <meta property="twitter:image" content="@yield('meta_image')" />
     @endif
 
     {{-- Scripts & Styles --}}
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Roboto+Serif:ital,opsz,wght@0,8..144,100..900;1,8..144,100..900&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-    
+
     @stack('styles')
     @stack('json-ld')
 </head>
@@ -48,9 +45,12 @@
             <h1 class="italic text-xl">I-Licitaciones</h1>
             <nav class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm">
                 <a href="{{ route('home') }}" class="text-neutral-400 hover:text-neutral-100 transition-colors">Home</a>
-                <a href="{{ route('organismos') }}" class="text-neutral-400 hover:text-neutral-100 transition-colors">Organismos</a>
-                <a href="{{ route('empresas') }}" class="text-neutral-400 hover:text-neutral-100 transition-colors">Empresas</a>
-                <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" class="text-neutral-400 hover:text-neutral-100 transition-colors">GitHub</a>
+                <a href="{{ route('organismos') }}"
+                    class="text-neutral-400 hover:text-neutral-100 transition-colors">Organismos</a>
+                <a href="{{ route('empresas') }}"
+                    class="text-neutral-400 hover:text-neutral-100 transition-colors">Empresas</a>
+                <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank"
+                    class="text-neutral-400 hover:text-neutral-100 transition-colors">GitHub</a>
             </nav>
         </div>
         <div class="p-4">

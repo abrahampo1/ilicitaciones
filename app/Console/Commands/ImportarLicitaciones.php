@@ -52,28 +52,45 @@ class ImportarLicitaciones extends Command
         $this->categoriasCache = Categoria::pluck('id', 'xml_id')->toArray();
         $this->info("  - Categorías cargadas: " . count($this->categoriasCache));
 
-        // Cargar organismos existentes (identificador -> id)
+        // Cargar organismos existentes (identificador + nombre -> id)
         Organismo::select('id', 'identificador', 'nombre')->chunk(10000, function ($organismos) {
             foreach ($organismos as $org) {
-                $key = $this->makeKey($org->identificador);
+                $key = $this->makeOrganismoKey($org->identificador, $org->nombre);
                 $this->organismosCache[$key] = $org->id;
             }
         });
         $this->info("  - Organismos cargados: " . count($this->organismosCache));
 
-        // Cargar empresas existentes (identificador -> id)
+        // Cargar empresas existentes (identificador como clave única, nombre como fallback)
         Empresa::select('id', 'identificador', 'nombre')->chunk(10000, function ($empresas) {
             foreach ($empresas as $emp) {
-                $key = $this->makeKey($emp->identificador);
+                $key = $this->makeEmpresaKey($emp->identificador, $emp->nombre);
                 $this->empresasCache[$key] = $emp->id;
             }
         });
         $this->info("  - Empresas cargadas: " . count($this->empresasCache));
     }
 
-    private function makeKey(?string $identificador): string
+    private function makeOrganismoKey(?string $identificador, ?string $nombre): string
     {
-        return md5($identificador ?? Str::uuid());
+        // Para organismos: identificador + nombre como clave única
+        if (empty($identificador) && empty($nombre)) {
+            return Str::uuid()->toString();
+        }
+        return md5(($identificador ?? '') . '|' . ($nombre ?? ''));
+    }
+
+    private function makeEmpresaKey(?string $identificador, ?string $nombre = null): string
+    {
+        // Para empresas: el identificador es único (mismo ID = misma empresa aunque nombre varíe)
+        // Si no hay identificador, usar nombre como fallback
+        if (!empty($identificador)) {
+            return md5($identificador);
+        }
+        if (!empty($nombre)) {
+            return md5('nombre:' . $nombre);
+        }
+        return Str::uuid()->toString();
     }
 
     function importarLicitacion($year)
@@ -158,7 +175,7 @@ class ImportarLicitaciones extends Command
             $organismo = $entry['ContractFolderStatus']['LocatedContractingParty']['Party'] ?? null;
             $organismoNombre = $organismo['PartyName']['Name'] ?? null;
             $organismoIdentificador = $organismo['PartyIdentification']['ID']['value'] ?? null;
-            $organismoKey = $this->makeKey($organismoIdentificador);
+            $organismoKey = $this->makeOrganismoKey($organismoIdentificador, $organismoNombre);
 
             // Si el organismo no existe en caché, preparar para inserción
             if (!isset($this->organismosCache[$organismoKey]) && $organismoNombre) {
@@ -185,7 +202,7 @@ class ImportarLicitaciones extends Command
             $empresaGanadora = $entry['ContractFolderStatus']['TenderResult']['WinningParty'] ?? null;
             $empresaNombre = $empresaGanadora['PartyName']['Name'] ?? null;
             $empresaIdentificador = $empresaGanadora['PartyIdentification']['ID']['value'] ?? null;
-            $empresaKey = $this->makeKey($empresaIdentificador);
+            $empresaKey = $this->makeEmpresaKey($empresaIdentificador, $empresaNombre);
 
             if (!isset($this->empresasCache[$empresaKey]) && $empresaNombre) {
                 if (!isset($empresasToInsert[$empresaKey])) {
@@ -209,7 +226,7 @@ class ImportarLicitaciones extends Command
                 ->orWhereIn('nombre', array_column($organismosToInsert, 'nombre'))
                 ->get(['id', 'identificador', 'nombre']);
             foreach ($newOrgs as $org) {
-                $key = $this->makeKey($org->identificador);
+                $key = $this->makeOrganismoKey($org->identificador, $org->nombre);
                 $this->organismosCache[$key] = $org->id;
             }
         }
@@ -222,7 +239,7 @@ class ImportarLicitaciones extends Command
                 ->orWhereIn('nombre', array_column($empresasToInsert, 'nombre'))
                 ->get(['id', 'identificador', 'nombre']);
             foreach ($newEmps as $emp) {
-                $key = $this->makeKey($emp->identificador);
+                $key = $this->makeEmpresaKey($emp->identificador, $emp->nombre);
                 $this->empresasCache[$key] = $emp->id;
             }
         }
@@ -236,13 +253,13 @@ class ImportarLicitaciones extends Command
             $organismo = $entry['ContractFolderStatus']['LocatedContractingParty']['Party'] ?? null;
             $organismoNombre = $organismo['PartyName']['Name'] ?? null;
             $organismoIdentificador = $organismo['PartyIdentification']['ID']['value'] ?? null;
-            $organismoKey = $this->makeKey($organismoIdentificador);
+            $organismoKey = $this->makeOrganismoKey($organismoIdentificador, $organismoNombre);
             $organismoId = $this->organismosCache[$organismoKey] ?? null;
 
             $empresaGanadora = $entry['ContractFolderStatus']['TenderResult']['WinningParty'] ?? null;
             $empresaNombre = $empresaGanadora['PartyName']['Name'] ?? null;
             $empresaIdentificador = $empresaGanadora['PartyIdentification']['ID']['value'] ?? null;
-            $empresaKey = $this->makeKey($empresaIdentificador);
+            $empresaKey = $this->makeEmpresaKey($empresaIdentificador, $empresaNombre);
             $empresaId = $this->empresasCache[$empresaKey] ?? null;
 
             $importes = $entry['ContractFolderStatus']['ProcurementProject']['BudgetAmount'] ?? null;

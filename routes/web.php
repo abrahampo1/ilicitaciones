@@ -5,6 +5,7 @@ use App\Models\Organismo;
 use App\Models\Empresa;
 use Illuminate\Support\Facades\Route;
 
+
 Route::get('/', function () {
     // Caché largo (1 hora) para estadísticas - se recalculan con comando artisan
     $stats = cache()->remember('home_stats', 3600, function () {

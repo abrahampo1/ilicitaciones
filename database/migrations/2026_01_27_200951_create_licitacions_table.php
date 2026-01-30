@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->text('titulo')->nullable();
             $table->text('descripcion')->nullable();
             $table->string('identificador')->nullable();
+            $table->string('url')->nullable();
+            $table->string('id_url')->nullable();
             $table->string('estado')->nullable();
 
             $table->double('importe_total')->nullable();

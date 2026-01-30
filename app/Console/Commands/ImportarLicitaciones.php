@@ -11,6 +11,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Noki\XmlConverter\Convert;
+use Str;
 
 class ImportarLicitaciones extends Command
 {
@@ -51,28 +52,28 @@ class ImportarLicitaciones extends Command
         $this->categoriasCache = Categoria::pluck('id', 'xml_id')->toArray();
         $this->info("  - Categorías cargadas: " . count($this->categoriasCache));
 
-        // Cargar organismos existentes (identificador+nombre -> id)
+        // Cargar organismos existentes (identificador -> id)
         Organismo::select('id', 'identificador', 'nombre')->chunk(10000, function ($organismos) {
             foreach ($organismos as $org) {
-                $key = $this->makeKey($org->identificador, $org->nombre);
+                $key = $this->makeKey($org->identificador);
                 $this->organismosCache[$key] = $org->id;
             }
         });
         $this->info("  - Organismos cargados: " . count($this->organismosCache));
 
-        // Cargar empresas existentes (identificador+nombre -> id)
+        // Cargar empresas existentes (identificador -> id)
         Empresa::select('id', 'identificador', 'nombre')->chunk(10000, function ($empresas) {
             foreach ($empresas as $emp) {
-                $key = $this->makeKey($emp->identificador, $emp->nombre);
+                $key = $this->makeKey($emp->identificador);
                 $this->empresasCache[$key] = $emp->id;
             }
         });
         $this->info("  - Empresas cargadas: " . count($this->empresasCache));
     }
 
-    private function makeKey(?string $identificador, ?string $nombre): string
+    private function makeKey(?string $identificador): string
     {
-        return md5(($identificador ?? '') . '|' . ($nombre ?? ''));
+        return md5($identificador ?? Str::uuid());
     }
 
     function importarLicitacion($year)
@@ -122,10 +123,12 @@ class ImportarLicitaciones extends Command
             $data = json_decode($json, true);
 
             $feed = $data['feed'] ?? null;
-            if (!$feed) continue;
+            if (!$feed)
+                continue;
 
             $entries = $feed['entry'] ?? [];
-            if (empty($entries)) continue;
+            if (empty($entries))
+                continue;
 
             // Procesar en batches
             $chunks = array_chunk($entries, $batchSize);
@@ -182,7 +185,7 @@ class ImportarLicitaciones extends Command
             $empresaGanadora = $entry['ContractFolderStatus']['TenderResult']['WinningParty'] ?? null;
             $empresaNombre = $empresaGanadora['PartyName']['Name'] ?? null;
             $empresaIdentificador = $empresaGanadora['PartyIdentification']['ID']['value'] ?? null;
-            $empresaKey = $this->makeKey($empresaIdentificador, $empresaNombre);
+            $empresaKey = $this->makeKey($empresaIdentificador);
 
             if (!isset($this->empresasCache[$empresaKey]) && $empresaNombre) {
                 if (!isset($empresasToInsert[$empresaKey])) {
@@ -206,7 +209,7 @@ class ImportarLicitaciones extends Command
                 ->orWhereIn('nombre', array_column($organismosToInsert, 'nombre'))
                 ->get(['id', 'identificador', 'nombre']);
             foreach ($newOrgs as $org) {
-                $key = $this->makeKey($org->identificador, $org->nombre);
+                $key = $this->makeKey($org->identificador);
                 $this->organismosCache[$key] = $org->id;
             }
         }
@@ -219,7 +222,7 @@ class ImportarLicitaciones extends Command
                 ->orWhereIn('nombre', array_column($empresasToInsert, 'nombre'))
                 ->get(['id', 'identificador', 'nombre']);
             foreach ($newEmps as $emp) {
-                $key = $this->makeKey($emp->identificador, $emp->nombre);
+                $key = $this->makeKey($emp->identificador);
                 $this->empresasCache[$key] = $emp->id;
             }
         }
@@ -227,18 +230,19 @@ class ImportarLicitaciones extends Command
         // Ahora procesar licitaciones y adjudicaciones con los IDs en caché
         foreach ($entries as $entry) {
             $identificador = $entry['ContractFolderStatus']['ContractFolderID'] ?? null;
-            if (!$identificador) continue;
+            if (!$identificador)
+                continue;
 
             $organismo = $entry['ContractFolderStatus']['LocatedContractingParty']['Party'] ?? null;
             $organismoNombre = $organismo['PartyName']['Name'] ?? null;
             $organismoIdentificador = $organismo['PartyIdentification']['ID']['value'] ?? null;
-            $organismoKey = $this->makeKey($organismoIdentificador, $organismoNombre);
+            $organismoKey = $this->makeKey($organismoIdentificador);
             $organismoId = $this->organismosCache[$organismoKey] ?? null;
 
             $empresaGanadora = $entry['ContractFolderStatus']['TenderResult']['WinningParty'] ?? null;
             $empresaNombre = $empresaGanadora['PartyName']['Name'] ?? null;
             $empresaIdentificador = $empresaGanadora['PartyIdentification']['ID']['value'] ?? null;
-            $empresaKey = $this->makeKey($empresaIdentificador, $empresaNombre);
+            $empresaKey = $this->makeKey($empresaIdentificador);
             $empresaId = $this->empresasCache[$empresaKey] ?? null;
 
             $importes = $entry['ContractFolderStatus']['ProcurementProject']['BudgetAmount'] ?? null;
@@ -247,6 +251,8 @@ class ImportarLicitaciones extends Command
             $licitacionesData[] = [
                 'identificador' => $identificador,
                 'titulo' => $entry['title'] ?? null,
+                'url' => $entry['link']['@attributes']['href'] ?? null,
+                'id_url' => $entry['id'] ?? null,
                 'descripcion' => $entry['ContractFolderStatus']['TenderingTerms']['Description'] ?? null,
                 'estado' => $entry['ContractFolderStatus']['ContractFolderStatusCode']['value'] ?? null,
                 'importe_total' => $importes['TotalAmount']['value'] ?? null,
@@ -283,9 +289,21 @@ class ImportarLicitaciones extends Command
         if (!empty($licitacionesData)) {
             Licitacion::upsert(
                 $licitacionesData,
-                ['identificador'],
-                ['titulo', 'descripcion', 'estado', 'importe_total', 'importe_final', 'importe_estimado', 
-                 'fecha_contratacion', 'fecha_actualizacion', 'categoria_id', 'organismo_id', 'datos_raiz', 'updated_at']
+                ['identificador', 'id_url'],
+                [
+                    'titulo',
+                    'descripcion',
+                    'estado',
+                    'importe_total',
+                    'importe_final',
+                    'importe_estimado',
+                    'fecha_contratacion',
+                    'fecha_actualizacion',
+                    'categoria_id',
+                    'organismo_id',
+                    'datos_raiz',
+                    'updated_at'
+                ]
             );
         }
 
@@ -307,8 +325,16 @@ class ImportarLicitaciones extends Command
                 Adjudicacion::upsert(
                     $adjudicacionesToInsert,
                     ['licitacion_id', 'empresa_id'],
-                    ['importe', 'importe_final', 'urgencia', 'tipo_procedimiento', 'descripcion', 
-                     'fecha_adjudicacion', 'fecha_comienzo', 'updated_at']
+                    [
+                        'importe',
+                        'importe_final',
+                        'urgencia',
+                        'tipo_procedimiento',
+                        'descripcion',
+                        'fecha_adjudicacion',
+                        'fecha_comienzo',
+                        'updated_at'
+                    ]
                 );
             }
         }
@@ -321,7 +347,8 @@ class ImportarLicitaciones extends Command
 
     private function parseDate($date)
     {
-        if (!$date) return null;
+        if (!$date)
+            return null;
         try {
             return \Carbon\Carbon::parse($date)->format('Y-m-d H:i:s');
         } catch (\Exception $e) {

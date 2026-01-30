@@ -13,6 +13,8 @@ class Licitacion extends Model
         'estado',
         'importe_total',
         'importe_final',
+        'url',
+        'id_url',
         'importe_estimado',
         'fecha_contratacion',
         'fecha_actualizacion',

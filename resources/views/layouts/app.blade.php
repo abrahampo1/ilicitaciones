@@ -44,7 +44,7 @@
         <div class="text-neutral-100 flex flex-col md:flex-row items-center justify-between gap-4">
             <h1 class="italic text-xl">I-Licitaciones</h1>
             <nav class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm">
-                <a href="{{ route('home') }}" class="text-neutral-400 hover:text-neutral-100 transition-colors">Home</a>
+                <a href="{{ route('home') }}" class="text-neutral-400 hover:text-neutral-100 transition-colors">Inicio</a>
                 <a href="{{ route('organismos') }}"
                     class="text-neutral-400 hover:text-neutral-100 transition-colors">Organismos</a>
                 <a href="{{ route('empresas') }}"

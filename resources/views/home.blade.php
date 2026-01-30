@@ -104,7 +104,7 @@
 
                 <div class="space-y-1">
                     @foreach ($topOrganismos as $index => $organismo)
-                        <a href="{{ route('organismo.show', $organismo->id) }}"
+                        <a href="{{ route('organismo.show', $organismo->organismo_id) }}"
                             class="group flex items-center py-3 px-3 -mx-3 rounded-xl hover:bg-neutral-800/50 transition-all duration-200">
                             <span
                                 class="w-6 text-neutral-600 text-sm font-mono">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</span>

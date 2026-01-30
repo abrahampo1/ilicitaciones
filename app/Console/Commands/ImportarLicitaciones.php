@@ -158,7 +158,7 @@ class ImportarLicitaciones extends Command
             $organismo = $entry['ContractFolderStatus']['LocatedContractingParty']['Party'] ?? null;
             $organismoNombre = $organismo['PartyName']['Name'] ?? null;
             $organismoIdentificador = $organismo['PartyIdentification']['ID']['value'] ?? null;
-            $organismoKey = $this->makeKey($organismoIdentificador, $organismoNombre);
+            $organismoKey = $this->makeKey($organismoIdentificador);
 
             // Si el organismo no existe en caché, preparar para inserción
             if (!isset($this->organismosCache[$organismoKey]) && $organismoNombre) {

@@ -73,11 +73,42 @@ Route::get('/organismos', function (\Illuminate\Http\Request $request) {
         $query->where('nombre', 'like', "%{$search}%");
     }
 
-    $organismos = cache()->remember('organismos_page_' . request('page', 1) . '_search_' . ($search ?? ''), 3600, function () use ($query) {
-        return $query
+    // Advanced filters for organismos
+    // Filter by province
+    if ($request->has('provincia') && $request->input('provincia') !== '') {
+        $query->where('provincia', $request->input('provincia'));
+    }
+
+    // Generate cache key based on all filters
+    $cacheKey = 'organismos_page_' . request('page', 1) .
+                '_search_' . ($search ?? '') .
+                '_prov_' . ($request->input('provincia') ?? '') .
+                '_min_' . ($request->input('importe_min') ?? '') .
+                '_max_' . ($request->input('importe_max') ?? '') .
+                '_cat_' . ($request->input('categoria_id') ?? '');
+
+    $organismos = cache()->remember($cacheKey, 3600, function () use ($query, $request) {
+        $baseQuery = $query
             ->select('organismos.*')
             ->withCount('licitaciones')
-            ->withSum('licitaciones as total_importe', 'importe_total')
+            ->withSum('licitaciones as total_importe', 'importe_total');
+
+        // Apply amount range filters on the aggregated results
+        if ($request->has('importe_min') && $request->input('importe_min') !== '') {
+            $baseQuery->having('total_importe', '>=', (float)$request->input('importe_min'));
+        }
+        if ($request->has('importe_max') && $request->input('importe_max') !== '') {
+            $baseQuery->having('total_importe', '<=', (float)$request->input('importe_max'));
+        }
+
+        // Filter by category - need to use whereHas for relationship
+        if ($request->has('categoria_id') && $request->input('categoria_id') !== '') {
+            $baseQuery->whereHas('licitaciones', function ($q) use ($request) {
+                $q->where('categoria_id', $request->input('categoria_id'));
+            });
+        }
+
+        return $baseQuery
             ->orderByDesc('total_importe')
             ->paginate(15);
     });
@@ -86,7 +117,20 @@ Route::get('/organismos', function (\Illuminate\Http\Request $request) {
     $totalOrganismos = cache()->remember('organismos_count', 3600, fn() => Organismo::count());
     $totalVolumen = cache()->remember('licitaciones_sum_total', 3600, fn() => Licitacion::sum('importe_total'));
 
-    return view('organismos', compact('organismos', 'totalOrganismos', 'totalVolumen'));
+    // Get unique provinces for filter dropdown
+    $provincias = cache()->remember('organismos_provincias', 3600, fn() =>
+        Organismo::select('provincia')
+            ->distinct()
+            ->whereNotNull('provincia')
+            ->where('provincia', '!=', '')
+            ->orderBy('provincia')
+            ->pluck('provincia')
+    );
+
+    // Get categories for filter dropdown
+    $categorias = cache()->remember('categorias_list', 3600, fn() => \App\Models\Categoria::orderBy('nombre')->get());
+
+    return view('organismos', compact('organismos', 'totalOrganismos', 'totalVolumen', 'provincias', 'categorias'));
 })->name('organismos');
 
 Route::get('/organismo/{id}', function ($id) {
@@ -99,6 +143,7 @@ Route::get('/organismo/{id}', function ($id) {
 Route::get('/empresas', function (\Illuminate\Http\Request $request) {
     $query = \Illuminate\Support\Facades\DB::table('adjudicacions')
         ->join('empresas', 'adjudicacions.empresa_id', '=', 'empresas.id')
+        ->leftJoin('licitacions', 'adjudicacions.licitacion_id', '=', 'licitacions.id')
         ->select(
             'empresas.id',
             'empresas.nombre',
@@ -113,7 +158,28 @@ Route::get('/empresas', function (\Illuminate\Http\Request $request) {
         $query->orWhere('empresas.identificador', 'like', "%{$search}%");
     }
 
-    $empresas = cache()->remember('empresas_page_' . request('page', 1) . '_search_' . ($search ?? ''), 3600, function () use ($query) {
+    // Advanced filters for empresas
+    // Filter by awarded amount range
+    if ($request->has('importe_min') && $request->input('importe_min') !== '') {
+        $query->havingRaw('SUM(adjudicacions.importe) >= ?', [(float)$request->input('importe_min')]);
+    }
+    if ($request->has('importe_max') && $request->input('importe_max') !== '') {
+        $query->havingRaw('SUM(adjudicacions.importe) <= ?', [(float)$request->input('importe_max')]);
+    }
+
+    // Filter by category
+    if ($request->has('categoria_id') && $request->input('categoria_id') !== '') {
+        $query->where('licitacions.categoria_id', $request->input('categoria_id'));
+    }
+
+    // Generate cache key based on all filters
+    $cacheKey = 'empresas_page_' . request('page', 1) .
+                '_search_' . ($search ?? '') .
+                '_min_' . ($request->input('importe_min') ?? '') .
+                '_max_' . ($request->input('importe_max') ?? '') .
+                '_cat_' . ($request->input('categoria_id') ?? '');
+
+    $empresas = cache()->remember($cacheKey, 3600, function () use ($query) {
         return $query->orderByDesc('total_importe')
             ->paginate(15)
             ->withQueryString();
@@ -123,7 +189,10 @@ Route::get('/empresas', function (\Illuminate\Http\Request $request) {
     $totalVolumen = cache()->remember('adjudicaciones_sum_total', 3600, fn() => \App\Models\Adjudicacion::sum('importe'));
     $totalEmpresas = cache()->remember('empresas_count', 3600, fn() => Empresa::count());
 
-    return view('empresas', compact('empresas', 'totalVolumen', 'totalEmpresas'));
+    // Get categories for filter dropdown
+    $categorias = cache()->remember('categorias_list', 3600, fn() => \App\Models\Categoria::orderBy('nombre')->get());
+
+    return view('empresas', compact('empresas', 'totalVolumen', 'totalEmpresas', 'categorias'));
 })->name('empresas');
 
 Route::get('/empresa/{id}', function ($id) {

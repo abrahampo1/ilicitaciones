@@ -1,8 +1,11 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Sync contratos del mes actual cada noche a las 02:00
+Schedule::command('contracts:sync')->dailyAt('02:00')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/contracts-sync.log'))
+    ->onFailure(function () {
+        logger()->error('contracts:sync falló en el cron nocturno');
+    });

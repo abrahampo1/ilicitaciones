@@ -17,11 +17,12 @@ class DownloadPgeDataset implements ShouldQueue
     public int $tries = 2;
     public int $timeout = 900;
     public int $backoff = 60;
-    public string $queue = 'downloads';
 
     public function __construct(
         public int $year,
-    ) {}
+    ) {
+        $this->onQueue('downloads');
+    }
 
     public function handle(): void
     {

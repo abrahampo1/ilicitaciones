@@ -18,13 +18,14 @@ class DownloadPlacspMonth implements ShouldQueue
     public int $tries = 2;
     public int $timeout = 900;
     public int $backoff = 60;
-    public string $queue = 'downloads';
 
     private static string $baseUrl = 'https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_643';
 
     public function __construct(
         public string $month,
-    ) {}
+    ) {
+        $this->onQueue('downloads');
+    }
 
     public function handle(): void
     {

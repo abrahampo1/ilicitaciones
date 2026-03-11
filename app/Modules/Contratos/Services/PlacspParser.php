@@ -69,7 +69,7 @@ class PlacspParser
         $data = [
             'external_id' => $id,
             'link' => $link ?: null,
-            'updated_at_source' => $updated ?: null,
+            'updated_at_source' => $updated ? $this->parseDate($updated) : null,
         ];
 
         // Expediente
@@ -262,7 +262,19 @@ class PlacspParser
 
     private function dateVal(SimpleXMLElement $el): ?string
     {
-        $val = trim((string) $el);
-        return $val !== '' ? $val : null;
+        return $this->parseDate(trim((string) $el));
+    }
+
+    private function parseDate(string $val): ?string
+    {
+        if ($val === '') {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::parse($val)->format('Y-m-d H:i:s');
+        } catch (\Exception) {
+            return null;
+        }
     }
 }

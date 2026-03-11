@@ -230,11 +230,11 @@ return [
     'environments' => [
         'production' => [
             'downloads' => [
-                'maxProcesses' => 3, // 3 descargas simultáneas max
+                'maxProcesses' => 3,
             ],
             'processing' => [
-                'maxProcesses' => 8, // 8 atom files en paralelo
-                'balanceMaxShift' => 2,
+                'maxProcesses' => 10,
+                'balanceMaxShift' => 3,
                 'balanceCooldown' => 3,
             ],
         ],

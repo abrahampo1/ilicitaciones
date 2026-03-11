@@ -117,7 +117,7 @@
                             {{ $sort === $field ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10' : 'border-neutral-700/50 hover:border-neutral-600' }}">
                     {{ $label }}
                     @if($sort === $field)
-                        <span>{{ $dir === 'asc' ? '&uarr;' : '&darr;' }}</span>
+                        <span>{{ $dir === 'asc' ? '↑' : '↓' }}</span>
                     @endif
                 </button>
             @endforeach

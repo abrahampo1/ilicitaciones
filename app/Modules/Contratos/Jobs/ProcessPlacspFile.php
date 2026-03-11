@@ -119,7 +119,7 @@ class ProcessPlacspFile implements ShouldQueue
                 'importe_final' => $data['importe_sin_iva'] ?? null,
                 'importe_estimado' => $data['valor_estimado'] ?? null,
                 'fecha_contratacion' => $data['fecha_formalizacion'] ?? null,
-                'fecha_actualizacion' => now(),
+                'fecha_actualizacion' => $data['updated_at_source'] ?? now(),
                 'categoria_id' => $categoriaId,
                 'organismo_id' => $organismoId,
                 // Enriched fields

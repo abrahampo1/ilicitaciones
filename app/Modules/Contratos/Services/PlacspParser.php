@@ -39,6 +39,7 @@ class PlacspParser
         $atomChildren = $entry->children(self::NS_ATOM);
         $id = trim((string) $atomChildren->id);
         $title = trim((string) $atomChildren->title);
+        $updated = trim((string) $atomChildren->updated);
 
         $link = '';
         foreach ($entry->link as $l) {
@@ -68,6 +69,7 @@ class PlacspParser
         $data = [
             'external_id' => $id,
             'link' => $link ?: null,
+            'updated_at_source' => $updated ?: null,
         ];
 
         // Expediente

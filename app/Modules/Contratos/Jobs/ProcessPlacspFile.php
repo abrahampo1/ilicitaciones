@@ -186,7 +186,16 @@ class ProcessPlacspFile implements ShouldQueue
 
             // Bulk insert new organismos (insertOrIgnore handles race conditions)
             if (!empty($newOrganismos)) {
-                Organismo::insertOrIgnore(array_values($newOrganismos));
+                // Normalize all rows to have the same keys (union of all keys)
+                $allKeys = [];
+                foreach ($newOrganismos as $org) {
+                    $allKeys = array_merge($allKeys, array_keys($org));
+                }
+                $allKeys = array_unique($allKeys);
+                $defaults = array_fill_keys($allKeys, null);
+                $normalized = array_map(fn($org) => array_merge($defaults, $org), array_values($newOrganismos));
+
+                Organismo::insertOrIgnore($normalized);
 
                 // Refresh cache: query back the newly inserted organismos by dir3/nombre
                 $dir3Codes = array_filter(array_column(array_values($newOrganismos), 'dir3_code'));

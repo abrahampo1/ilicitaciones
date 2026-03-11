@@ -28,14 +28,7 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     protected function gate(): void
     {
         Gate::define('viewHorizon', function ($user = null) {
-            // En local siempre accesible; en producción restringir por IP o auth
-            if (app()->environment('local')) {
-                return true;
-            }
-
-            return in_array(optional($user)->email, [
-                //
-            ]);
+            return true;
         });
     }
 }

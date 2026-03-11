@@ -252,7 +252,6 @@ class ProcessPlacspFile implements ShouldQueue
 
             $licitacionesData = [];
             $adjudicacionesData = [];
-
             foreach ($entries as $data) {
                 if (empty($data['external_id']) || empty($data['expediente'])) {
                     continue;
@@ -338,8 +337,11 @@ class ProcessPlacspFile implements ShouldQueue
                 }
             }
 
-            // Batch upsert licitaciones
+            // Batch upsert licitaciones (deduplicate by external_id, keep last)
             if (!empty($licitacionesData)) {
+                $licitacionesData = array_values(
+                    collect($licitacionesData)->keyBy('external_id')->all()
+                );
                 Licitacion::upsert(
                     $licitacionesData,
                     ['external_id'],

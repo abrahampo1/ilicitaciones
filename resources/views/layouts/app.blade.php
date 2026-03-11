@@ -101,8 +101,8 @@
                     {{-- Presupuestos module --}}
                     <div x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" class="relative">
                         <button @click="open = !open"
-                            class="flex items-center gap-1 px-3 py-2 rounded-lg text-neutral-500 hover:text-neutral-400 hover:bg-neutral-800/30 transition-all">
-                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400/50"></span>
+                            class="flex items-center gap-1 px-3 py-2 rounded-lg text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800/50 transition-all">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
                             Presupuestos
                             <svg class="w-3.5 h-3.5 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                         </button>
@@ -114,8 +114,23 @@
                             x-transition:leave-start="opacity-100 translate-y-0"
                             x-transition:leave-end="opacity-0 -translate-y-1"
                             class="absolute top-full left-0 mt-1 w-52 bg-neutral-900 border border-neutral-700/50 rounded-xl shadow-2xl shadow-black/50 overflow-hidden">
-                            <div class="p-4 text-center">
-                                <p class="text-neutral-500 text-xs">Pr&oacute;ximamente</p>
+                            <div class="p-1.5">
+                                <a href="{{ route('presupuestos.index') }}" wire:navigate
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
+                                    <span class="text-base">&#x25A3;</span> Dashboard
+                                </a>
+                                <a href="{{ route('presupuestos.explorador') }}" wire:navigate
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
+                                    <span class="text-base">&#x25C7;</span> Explorador
+                                </a>
+                                <a href="{{ route('presupuestos.comparador') }}" wire:navigate
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
+                                    <span class="text-base">&#x25CB;</span> Comparador
+                                </a>
+                                <a href="{{ route('presupuestos.ejecucion') }}" wire:navigate
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-neutral-300 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
+                                    <span class="text-base">&#x25B3;</span> Ejecuci&oacute;n
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -213,11 +228,37 @@
                     </div>
                 </div>
 
-                {{-- Future modules --}}
-                <div class="flex items-center gap-2 px-3 py-2.5 text-neutral-500">
-                    <span class="w-1.5 h-1.5 rounded-full bg-sky-400/50"></span>
-                    Presupuestos <span class="text-xs text-neutral-600 ml-auto">pr&oacute;ximamente</span>
+                {{-- Presupuestos section --}}
+                <div x-data="{ expanded: false }">
+                    <button @click="expanded = !expanded"
+                        class="flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-neutral-200 hover:bg-neutral-800 transition-colors">
+                        <span class="flex items-center gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                            Presupuestos
+                        </span>
+                        <svg class="w-3.5 h-3.5 transition-transform" :class="expanded && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                    </button>
+                    <div x-show="expanded" x-collapse class="ml-4 space-y-0.5">
+                        <a href="{{ route('presupuestos.index') }}" wire:navigate @click="mobileOpen = false"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
+                            <span>&#x25A3;</span> Dashboard
+                        </a>
+                        <a href="{{ route('presupuestos.explorador') }}" wire:navigate @click="mobileOpen = false"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
+                            <span>&#x25C7;</span> Explorador
+                        </a>
+                        <a href="{{ route('presupuestos.comparador') }}" wire:navigate @click="mobileOpen = false"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
+                            <span>&#x25CB;</span> Comparador
+                        </a>
+                        <a href="{{ route('presupuestos.ejecucion') }}" wire:navigate @click="mobileOpen = false"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800 transition-colors">
+                            <span>&#x25B3;</span> Ejecuci&oacute;n
+                        </a>
+                    </div>
                 </div>
+
+                {{-- Future modules --}}
                 <div class="flex items-center gap-2 px-3 py-2.5 text-neutral-500">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-400/50"></span>
                     Legislaci&oacute;n <span class="text-xs text-neutral-600 ml-auto">pr&oacute;ximamente</span>

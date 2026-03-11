@@ -84,7 +84,17 @@ class PlacspParser
         $cacExtChildren = $folder->children(self::NS_CAC_EXT);
         $locatedParty = $cacExtChildren->LocatedContractingParty;
 
-        $organoData = [];
+        $organoData = [
+            'direccion' => null,
+            'provincia' => null,
+            'codigo_postal' => null,
+            'pais' => null,
+            'contacto_nombre' => null,
+            'contacto_telefono' => null,
+            'contacto_fax' => null,
+            'contacto_email' => null,
+            'sitio_web' => null,
+        ];
         if ($locatedParty && $locatedParty->count()) {
             $party = $locatedParty->children(self::NS_CAC)->Party;
             if ($party && $party->count()) {
@@ -138,10 +148,8 @@ class PlacspParser
             $data['organo_contratante'] = '';
         }
 
-        // Incluir datos del organismo en la respuesta
-        if (! empty(array_filter($organoData, fn($v) => $v !== null))) {
-            $data['_organismo_data'] = array_filter($organoData, fn($v) => $v !== null);
-        }
+        // Always include all organismo keys for batch insert consistency
+        $data['_organismo_data'] = $organoData;
 
         // ProcurementProject
         $project = $folder->children(self::NS_CAC)->ProcurementProject;

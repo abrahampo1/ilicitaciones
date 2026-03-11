@@ -28,26 +28,37 @@ class Dashboard extends Component
 
         $topEmpresas = cache()->remember('home_top_empresas', 3600, function () {
             return DB::table('adjudicacions')
-                ->select('empresa_id', DB::raw('SUM(importe) as total_importe'))
-                ->groupBy('empresa_id')
+                ->join('empresas', 'adjudicacions.empresa_id', '=', 'empresas.id')
+                ->select(
+                    'empresas.id as empresa_id',
+                    'empresas.nombre as empresa_nombre',
+                    DB::raw('SUM(adjudicacions.importe) as total_importe')
+                )
+                ->groupBy('empresas.id', 'empresas.nombre')
                 ->orderByDesc('total_importe')
                 ->limit(10)
                 ->get()
                 ->map(function ($row) {
-                    $row->empresa = Empresa::select('id', 'nombre')->find($row->empresa_id);
+                    $row->empresa = (object) ['id' => $row->empresa_id, 'nombre' => $row->empresa_nombre];
                     return $row;
                 });
         });
 
         $topOrganismos = cache()->remember('home_top_organismos', 3600, function () {
             return DB::table('licitacions')
-                ->select('organismo_id', DB::raw('SUM(importe_total) as total_importe'))
-                ->groupBy('organismo_id')
+                ->join('organismos', 'licitacions.organismo_id', '=', 'organismos.id')
+                ->select(
+                    'organismos.id as organismo_id',
+                    'organismos.nombre as organismo_nombre',
+                    DB::raw('SUM(licitacions.importe_total) as total_importe')
+                )
+                ->whereNotNull('licitacions.organismo_id')
+                ->groupBy('organismos.id', 'organismos.nombre')
                 ->orderByDesc('total_importe')
                 ->limit(10)
                 ->get()
                 ->map(function ($row) {
-                    $row->organismo = Organismo::select('id', 'nombre')->find($row->organismo_id);
+                    $row->organismo = (object) ['id' => $row->organismo_id, 'nombre' => $row->organismo_nombre];
                     return $row;
                 });
         });

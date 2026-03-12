@@ -13,7 +13,7 @@ class ContratoDetalle extends Component
 
     public function mount(int $id): void
     {
-        $this->licitacion = Licitacion::findOrFail($id);
+        $this->licitacion = Licitacion::with(['historicos'])->findOrFail($id);
     }
 
     public function render()

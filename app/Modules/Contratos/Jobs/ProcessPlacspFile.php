@@ -6,6 +6,7 @@ use Modules\Contratos\Models\Adjudicacion;
 use Modules\Contratos\Models\Categoria;
 use Modules\Contratos\Models\Empresa;
 use Modules\Contratos\Models\Licitacion;
+use Modules\Contratos\Models\LicitacionHistorico;
 use Modules\Contratos\Models\Organismo;
 use Modules\Contratos\Services\PlacspParser;
 use Illuminate\Bus\Queueable;
@@ -29,6 +30,11 @@ class ProcessPlacspFile implements ShouldQueue
     private array $organismosCache = [];
     private array $empresasCache = [];
     private array $categoriasCache = [];
+
+    private const TRACKED_FIELDS = [
+        'status_code', 'importe_con_iva', 'importe_sin_iva', 'valor_estimado',
+        'importe_adjudicacion_sin_iva', 'importe_adjudicacion_con_iva',
+    ];
 
     // Redis cache key prefix and TTL (2 hours)
     private const CACHE_TAG = 'placsp_import';
@@ -346,11 +352,63 @@ class ProcessPlacspFile implements ShouldQueue
                 }
             }
 
-            // Batch upsert licitaciones (deduplicate by external_id, keep last)
+            // Snapshot historicos before upsert
             if (!empty($licitacionesData)) {
                 $licitacionesData = array_values(
                     collect($licitacionesData)->keyBy('external_id')->all()
                 );
+
+                $externalIds = array_column($licitacionesData, 'external_id');
+                $existentes = Licitacion::whereIn('external_id', $externalIds)
+                    ->get(['id', 'external_id', 'estado', 'status_code', 'importe_con_iva', 'importe_sin_iva', 'valor_estimado', 'importe_adjudicacion_sin_iva', 'importe_adjudicacion_con_iva', 'fecha_actualizacion', 'datos_raiz'])
+                    ->keyBy('external_id');
+
+                $historicosToInsert = [];
+                foreach ($licitacionesData as $newData) {
+                    $existing = $existentes[$newData['external_id']] ?? null;
+                    if (!$existing) {
+                        continue;
+                    }
+
+                    $cambios = [];
+                    foreach (self::TRACKED_FIELDS as $field) {
+                        $oldVal = $existing->{$field};
+                        $newVal = $newData[$field] ?? null;
+                        if ((string) $oldVal !== (string) $newVal) {
+                            $cambios[$field] = ['old' => $oldVal, 'new' => $newVal];
+                        }
+                    }
+
+                    if (empty($cambios)) {
+                        continue;
+                    }
+
+                    $historicosToInsert[] = [
+                        'licitacion_id' => $existing->id,
+                        'estado' => $existing->estado,
+                        'status_code' => $existing->status_code,
+                        'importe_con_iva' => $existing->importe_con_iva,
+                        'importe_sin_iva' => $existing->importe_sin_iva,
+                        'valor_estimado' => $existing->valor_estimado,
+                        'importe_adjudicacion_sin_iva' => $existing->importe_adjudicacion_sin_iva,
+                        'importe_adjudicacion_con_iva' => $existing->importe_adjudicacion_con_iva,
+                        'fecha_actualizacion' => $existing->fecha_actualizacion,
+                        'datos_raiz' => $existing->datos_raiz,
+                        'cambios' => json_encode($cambios),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+
+                if (!empty($historicosToInsert)) {
+                    foreach (array_chunk($historicosToInsert, 50) as $chunk) {
+                        LicitacionHistorico::insert($chunk);
+                    }
+                }
+            }
+
+            // Batch upsert licitaciones
+            if (!empty($licitacionesData)) {
                 Licitacion::upsert(
                     $licitacionesData,
                     ['external_id'],

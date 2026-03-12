@@ -155,6 +155,96 @@
                 </div>
             @endif
 
+            <!-- Histórico de Estados -->
+            @if($licitacion->historicos && $licitacion->historicos->count() > 0)
+                <div class="p-6 bg-neutral-900/50 border border-neutral-800 rounded-2xl mb-8">
+                    <h3 class="text-neutral-400 text-xs uppercase tracking-wider mb-4 font-semibold">Histórico de estados</h3>
+                    <div class="relative pl-6">
+                        {{-- Línea vertical --}}
+                        <div class="absolute left-[7px] top-2 bottom-2 w-px bg-neutral-700/50"></div>
+
+                        {{-- Estado actual --}}
+                        @php
+                            $currentCode = $licitacion->status_code;
+                            $currentDotClass = match ($currentCode) {
+                                'ADJ', 'RES' => 'bg-emerald-400',
+                                'EV' => 'bg-amber-400',
+                                'PUB' => 'bg-sky-400',
+                                'ANUL' => 'bg-red-400',
+                                'PRE' => 'bg-violet-400',
+                                default => 'bg-neutral-400',
+                            };
+                            $currentBadgeClass = match ($currentCode) {
+                                'ADJ', 'RES' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                                'EV' => 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                                'PUB' => 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+                                'ANUL' => 'bg-red-500/10 text-red-400 border-red-500/20',
+                                'PRE' => 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+                                default => 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20',
+                            };
+                        @endphp
+                        <div class="relative mb-5">
+                            <div class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full {{ $currentDotClass }} ring-2 ring-neutral-900"></div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-2.5 py-0.5 text-xs rounded-full border {{ $currentBadgeClass }}">
+                                    {{ \Modules\Contratos\Models\Licitacion::STATUS_LABELS[$currentCode] ?? $licitacion->estado ?? 'Sin estado' }}
+                                </span>
+                                <span class="text-xs text-neutral-500">(actual)</span>
+                                @if($licitacion->fecha_actualizacion)
+                                    <span class="text-xs text-neutral-500 font-mono">{{ \Carbon\Carbon::parse($licitacion->fecha_actualizacion)->format('d/m/Y H:i') }}</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Historicos en orden cronológico inverso --}}
+                        @foreach($licitacion->historicos->reverse() as $historico)
+                            @php
+                                $hCode = $historico->status_code;
+                                $hDotClass = match ($hCode) {
+                                    'ADJ', 'RES' => 'bg-emerald-400',
+                                    'EV' => 'bg-amber-400',
+                                    'PUB' => 'bg-sky-400',
+                                    'ANUL' => 'bg-red-400',
+                                    'PRE' => 'bg-violet-400',
+                                    default => 'bg-neutral-400',
+                                };
+                                $hBadgeClass = match ($hCode) {
+                                    'ADJ', 'RES' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                                    'EV' => 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+                                    'PUB' => 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+                                    'ANUL' => 'bg-red-500/10 text-red-400 border-red-500/20',
+                                    'PRE' => 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+                                    default => 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20',
+                                };
+                            @endphp
+                            <div class="relative mb-5 last:mb-0">
+                                <div class="absolute -left-6 top-1 w-3.5 h-3.5 rounded-full {{ $hDotClass }} opacity-60 ring-2 ring-neutral-900"></div>
+                                <div class="flex flex-wrap items-center gap-2 mb-1">
+                                    <span class="px-2.5 py-0.5 text-xs rounded-full border {{ $hBadgeClass }} opacity-80">
+                                        {{ \Modules\Contratos\Models\Licitacion::STATUS_LABELS[$hCode] ?? $historico->estado ?? 'Sin estado' }}
+                                    </span>
+                                    @if($historico->fecha_actualizacion)
+                                        <span class="text-xs text-neutral-500 font-mono">{{ \Carbon\Carbon::parse($historico->fecha_actualizacion)->format('d/m/Y H:i') }}</span>
+                                    @endif
+                                </div>
+                                @if($historico->cambios)
+                                    <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                                        @foreach($historico->cambios as $campo => $diff)
+                                            <span class="text-xs text-neutral-500">
+                                                {{ str_replace('_', ' ', $campo) }}:
+                                                <span class="text-red-400/70 line-through">{{ is_numeric($diff['old'] ?? '') ? number_format($diff['old'], 2, ',', '.') : (\Modules\Contratos\Models\Licitacion::STATUS_LABELS[$diff['old']] ?? $diff['old'] ?? '-') }}</span>
+                                                &rarr;
+                                                <span class="text-emerald-400/70">{{ is_numeric($diff['new'] ?? '') ? number_format($diff['new'], 2, ',', '.') : (\Modules\Contratos\Models\Licitacion::STATUS_LABELS[$diff['new']] ?? $diff['new'] ?? '-') }}</span>
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <!-- Description -->
             @if($licitacion->descripcion)
                 <div class="p-6 bg-neutral-900/50 border border-neutral-800 rounded-2xl mb-8">

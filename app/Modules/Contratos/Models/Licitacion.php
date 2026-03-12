@@ -171,4 +171,9 @@ class Licitacion extends Model
             ->withPivot('importe', 'importe_final', 'urgencia', 'tipo_procedimiento', 'descripcion', 'fecha_adjudicacion', 'fecha_comienzo')
             ->withTimestamps();
     }
+
+    public function historicos()
+    {
+        return $this->hasMany(LicitacionHistorico::class)->orderBy('created_at', 'asc');
+    }
 }

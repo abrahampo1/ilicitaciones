@@ -13,7 +13,8 @@ class SyncContracts extends Command
     protected $signature = 'contracts:sync
         {--month= : Mes a sincronizar (formato YYYYMM, ej: 202603). Por defecto el mes actual}
         {--all : Descargar todos los meses disponibles desde 2018}
-        {--sync : Ejecutar todo de forma síncrona (descarga + procesamiento, sin cola)}';
+        {--sync : Ejecutar todo de forma síncrona (descarga + procesamiento, sin cola)}
+        {--flush-cache : Limpiar caché Redis de importación antes de sincronizar}';
 
     protected $description = 'Descarga y procesa contratos de la PLACSP (Plataforma de Contratación del Sector Público)';
 
@@ -21,6 +22,11 @@ class SyncContracts extends Command
 
     public function handle(): int
     {
+        if ($this->option('flush-cache') || $this->option('all')) {
+            ProcessPlacspFile::flushImportCache();
+            $this->info('Caché de importación PLACSP limpiada.');
+        }
+
         $months = $this->resolveMonths();
 
         if ($this->option('sync')) {

@@ -69,6 +69,11 @@ class ProcessPlacspFile implements ShouldQueue
         Log::info("PLACSP: Procesado {$this->filePath} — {$upserted} contratos procesados");
     }
 
+    public static function flushImportCache(): void
+    {
+        Cache::tags([self::CACHE_TAG])->flush();
+    }
+
     private function preloadCaches(): void
     {
         // Categorias are small, always load from DB

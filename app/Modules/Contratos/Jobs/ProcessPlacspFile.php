@@ -355,17 +355,17 @@ class ProcessPlacspFile implements ShouldQueue
             // Snapshot historicos before upsert
             if (!empty($licitacionesData)) {
                 $licitacionesData = array_values(
-                    collect($licitacionesData)->keyBy('external_id')->all()
+                    collect($licitacionesData)->keyBy('identificador')->all()
                 );
 
-                $externalIds = array_column($licitacionesData, 'external_id');
-                $existentes = Licitacion::whereIn('external_id', $externalIds)
-                    ->get(['id', 'external_id', 'estado', 'status_code', 'importe_con_iva', 'importe_sin_iva', 'valor_estimado', 'importe_adjudicacion_sin_iva', 'importe_adjudicacion_con_iva', 'fecha_actualizacion', 'datos_raiz'])
-                    ->keyBy('external_id');
+                $identificadores = array_column($licitacionesData, 'identificador');
+                $existentes = Licitacion::whereIn('identificador', $identificadores)
+                    ->get(['id', 'identificador', 'estado', 'status_code', 'importe_con_iva', 'importe_sin_iva', 'valor_estimado', 'importe_adjudicacion_sin_iva', 'importe_adjudicacion_con_iva', 'fecha_actualizacion', 'datos_raiz'])
+                    ->keyBy('identificador');
 
                 $historicosToInsert = [];
                 foreach ($licitacionesData as $newData) {
-                    $existing = $existentes[$newData['external_id']] ?? null;
+                    $existing = $existentes[$newData['identificador']] ?? null;
                     if (!$existing) {
                         continue;
                     }
@@ -411,7 +411,7 @@ class ProcessPlacspFile implements ShouldQueue
             if (!empty($licitacionesData)) {
                 Licitacion::upsert(
                     $licitacionesData,
-                    ['external_id'],
+                    ['identificador'],
                     [
                         'titulo', 'estado', 'importe_total', 'importe_final', 'importe_estimado',
                         'fecha_contratacion', 'fecha_actualizacion', 'categoria_id', 'organismo_id',
@@ -424,7 +424,8 @@ class ProcessPlacspFile implements ShouldQueue
                         'importe_adjudicacion_sin_iva', 'importe_adjudicacion_con_iva',
                         'fecha_presentacion_limite', 'fecha_inicio', 'fecha_fin',
                         'fecha_adjudicacion', 'fecha_formalizacion',
-                        'resultado_code', 'num_ofertas', 'link', 'synced_at', 'updated_at',
+                        'resultado_code', 'num_ofertas',
+                        'external_id', 'link', 'synced_at', 'updated_at',
                     ]
                 );
             }

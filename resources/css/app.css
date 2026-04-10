@@ -9,3 +9,42 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Pagination dark theme */
+nav[aria-label="Pagination Navigation"] span,
+nav[aria-label="Pagination Navigation"] a {
+    background-color: rgb(38 38 38 / 0.8);
+    border-color: rgb(64 64 64 / 0.5);
+    color: rgb(163 163 163);
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+nav[aria-label="Pagination Navigation"] a:hover {
+    background-color: rgb(64 64 64);
+    color: rgb(245 245 245);
+}
+
+nav[aria-label="Pagination Navigation"] span[aria-current="page"] span {
+    background-color: rgb(5 150 105);
+    border-color: rgb(5 150 105);
+    color: white;
+    font-weight: 500;
+}
+
+nav[aria-label="Pagination Navigation"] span[aria-disabled="true"] span {
+    background-color: rgb(38 38 38 / 0.4);
+    color: rgb(82 82 82);
+    cursor: not-allowed;
+}
+
+nav[aria-label="Pagination Navigation"] > div > div:first-child {
+    color: rgb(115 115 115);
+    font-size: 0.875rem;
+}
+
+nav[aria-label="Pagination Navigation"] > div {
+    gap: 0.25rem;
+}

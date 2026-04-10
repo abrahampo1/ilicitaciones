@@ -32,6 +32,9 @@
         <meta property="twitter:image" content="@yield('meta_image')" />
     @endif
 
+    {{-- Pagination SEO --}}
+    @stack('pagination-links')
+
     {{-- Scripts & Styles --}}
     @vite('resources/css/app.css')
 
@@ -39,33 +42,58 @@
     @stack('json-ld')
 </head>
 
-<body class="bg-neutral-900 text-neutral-100 font-serif">
+<body class="bg-neutral-900 text-neutral-100 font-serif min-h-screen flex flex-col">
     {{-- Skip link para accesibilidad --}}
     <a href="#contenido-principal"
         class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-neutral-100 focus:text-neutral-900 focus:px-4 focus:py-2 focus:rounded hidden">
         Saltar al contenido principal
     </a>
 
-    <div class="w-full h-full text-neutral-100 rounded-xl p-4">
-        <header class="flex flex-col md:flex-row items-center justify-between gap-4">
-            <a href="{{ route('home') }}"
-                class="italic text-xl hover:text-neutral-300 transition-colors">I-Licitaciones</a>
-            <nav aria-label="Navegación principal" class="flex flex-wrap justify-center gap-4 md:gap-6 text-sm">
+    <div class="flex-1 w-full text-neutral-100">
+        <header class="border-b border-neutral-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                 <a href="{{ route('home') }}"
-                    class="text-neutral-300 hover:text-neutral-100 transition-colors">Inicio</a>
-                <a href="{{ route('organismos') }}"
-                    class="text-neutral-300 hover:text-neutral-100 transition-colors">Organismos</a>
-                <a href="{{ route('empresas') }}"
-                    class="text-neutral-300 hover:text-neutral-100 transition-colors">Empresas</a>
-                <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" rel="noopener noreferrer"
-                    class="text-neutral-300 hover:text-neutral-100 transition-colors">GitHub</a>
-            </nav>
+                    class="text-xl font-light tracking-tight hover:text-neutral-300 transition-colors">
+                    <span class="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent font-medium">I</span>-Licitaciones
+                </a>
+                <nav aria-label="Navegación principal" class="flex flex-wrap justify-center gap-1 text-sm">
+                    <a href="{{ route('home') }}"
+                        class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('home') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">Inicio</a>
+                    <a href="{{ route('organismos') }}"
+                        class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('organismos', 'organismo.show') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">Organismos</a>
+                    <a href="{{ route('empresas') }}"
+                        class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('empresas', 'empresa.show') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">Empresas</a>
+                    <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" rel="noopener noreferrer"
+                        class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50 transition-colors">GitHub</a>
+                </nav>
+            </div>
         </header>
 
-        <main id="contenido-principal" class="p-4">
+        {{-- Breadcrumbs --}}
+        @hasSection('breadcrumbs')
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+                @yield('breadcrumbs')
+            </div>
+        @endif
+
+        <main id="contenido-principal" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             @yield('contenido')
         </main>
     </div>
+
+    <footer class="border-t border-neutral-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
+                <p>Datos de contratación pública en España</p>
+                <nav class="flex gap-4" aria-label="Navegación del pie de página">
+                    <a href="{{ route('home') }}" class="hover:text-neutral-300 transition-colors">Inicio</a>
+                    <a href="{{ route('organismos') }}" class="hover:text-neutral-300 transition-colors">Organismos</a>
+                    <a href="{{ route('empresas') }}" class="hover:text-neutral-300 transition-colors">Empresas</a>
+                    <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" rel="noopener noreferrer" class="hover:text-neutral-300 transition-colors">GitHub</a>
+                </nav>
+            </div>
+        </div>
+    </footer>
 </body>
 
 </html>

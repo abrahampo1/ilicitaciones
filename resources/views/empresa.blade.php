@@ -2,13 +2,33 @@
 
 @section('contenido')
 @section('meta_title', $empresa->nombre . ' - Adjudicaciones - I-Licitaciones')
-@section('meta_description', 'Adjudicaciones y contratos de ' . $empresa->nombre . '. Historial de licitaciones ganadas e importes totales.')
+@section('meta_description', $empresa->nombre . ': ' . number_format($totalAdjudicaciones, 0, ',', '.') . ' adjudicaciones por un total de ' . number_format($totalImporte, 0, ',', '.') . '€. Historial de licitaciones ganadas.')
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    @push('json-ld')
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "Organization",
+        "name": "{{ str_replace('"', '\"', $empresa->nombre) }}",
+        "identifier": "{{ $empresa->identificador }}"
+    }
+    </script>
+    @endpush
+
+@section('breadcrumbs')
+    <nav aria-label="Breadcrumb" class="text-xs text-neutral-500 flex items-center gap-1.5">
+        <a href="{{ route('home') }}" class="hover:text-neutral-300 transition-colors">Inicio</a>
+        <span>/</span>
+        <a href="{{ route('empresas') }}" class="hover:text-neutral-300 transition-colors">Empresas</a>
+        <span>/</span>
+        <span class="text-neutral-300 truncate max-w-xs">{{ Str::limit($empresa->nombre, 40) }}</span>
+    </nav>
+@endsection
+
         <!-- Back navigation -->
         <a href="{{ route('empresas') }}"
             class="inline-flex items-center gap-2 text-neutral-400 hover:text-neutral-200 transition-colors mb-8 group">
-            <span class="group-hover:-translate-x-1 transition-transform">←</span>
+            <span class="group-hover:-translate-x-1 transition-transform">&larr;</span>
             <span class="text-sm">Volver a empresas</span>
         </a>
 
@@ -35,39 +55,11 @@
             </div>
         </div>
 
-        @php
-            // Logic for stats
-            $adjudicacionesQuery = App\Models\Adjudicacion::where('empresa_id', $empresa->id);
-
-            // Clone query/use distinct queries to avoiding issues if we add groups later, though here it's simple
-            $totalImporte = (clone $adjudicacionesQuery)->sum('importe');
-            $totalAdjudicaciones = (clone $adjudicacionesQuery)->count();
-            $importeMedio = $totalAdjudicaciones > 0 ? $totalImporte / $totalAdjudicaciones : 0;
-
-            // Get list
-            $adjudicaciones = $adjudicacionesQuery
-                ->with('licitacion.organismo')
-                ->orderByDesc('fecha_adjudicacion') // Better sort by date
-                ->limit(50) // Limit for performance
-                ->get();
-
-            // Logic for annual breakdown (Empresas)
-            // Using fecha_adjudicacion from adjudicacions table
-            $inversionAnual = App\Models\Adjudicacion::where('empresa_id', $empresa->id)
-                ->selectRaw('YEAR(fecha_adjudicacion) as year, SUM(importe) as total')
-                ->whereNotNull('fecha_adjudicacion')
-                ->groupBy('year')
-                ->orderByDesc('year')
-                ->get();
-
-            $maxYearlyTotal = $inversionAnual->max('total');
-        @endphp
-
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Column: Adjudicaciones List (Span 2) -->
             <div class="lg:col-span-2">
                 <h2 class="flex items-center gap-3 text-xl font-light mb-6 text-neutral-200">
-                    <span class="text-emerald-400">◈</span>
+                    <span class="text-emerald-400">&#9672;</span>
                     Historial de Adjudicaciones
                 </h2>
 
@@ -83,18 +75,19 @@
                                             {{ $adj->licitacion->titulo ?? 'Sin título' }}
                                         </h3>
                                         @if($adj->licitacion && $adj->licitacion->organismo)
-                                            <p class="text-xs text-cyan-400/70 mt-2 truncate flex items-center gap-1">
-                                                <span>🏛️</span> {{ Str::limit($adj->licitacion->organismo->nombre, 60) }}
+                                            <p class="text-xs text-cyan-400/70 mt-2 truncate flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+                                                {{ Str::limit($adj->licitacion->organismo->nombre, 60) }}
                                             </p>
                                         @endif
                                     </div>
                                     <div class="md:text-right shrink-0">
                                         <p class="font-mono text-lg text-emerald-400 tabular-nums font-medium">
-                                            {{ number_format($adj->importe, 0, ',', '.') }}€
+                                            {{ number_format($adj->importe, 0, ',', '.') }}&euro;
                                         </p>
                                         @if($adj->importe_final && $adj->importe_final != $adj->importe)
                                             <p class="text-xs text-neutral-400 mt-1">
-                                                Final: {{ number_format($adj->importe_final, 0, ',', '.') }}€
+                                                Final: {{ number_format($adj->importe_final, 0, ',', '.') }}&euro;
                                             </p>
                                         @endif
                                     </div>
@@ -115,8 +108,9 @@
                                     @endif
                                     @if($adj->urgencia)
                                         <span
-                                            class="px-2.5 py-0.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-400">
-                                            ⚡ {{ $adj->urgencia }}
+                                            class="px-2.5 py-0.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-400 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+                                            {{ $adj->urgencia }}
                                         </span>
                                     @endif
                                 </div>
@@ -124,8 +118,12 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="p-12 bg-neutral-900/30 border border-neutral-800 rounded-2xl text-center">
-                        <p class="text-neutral-400">No hay adjudicaciones registradas para esta empresa</p>
+                    <div class="py-16 text-center bg-neutral-900/30 border border-neutral-800 rounded-2xl">
+                        <svg class="mx-auto h-12 w-12 text-neutral-600 mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        <p class="text-neutral-400 text-sm">No hay adjudicaciones registradas para esta empresa</p>
+                        <p class="text-neutral-500 text-xs mt-1">Los datos se actualizan periódicamente</p>
                     </div>
                 @endif
             </div>
@@ -140,8 +138,8 @@
                         </div>
                         <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2 font-medium">Importe Total</p>
                         <p class="text-3xl font-mono text-emerald-400 font-light tracking-tight truncate"
-                            title="{{ number_format($totalImporte, 2, ',', '.') }}€">
-                            {{ number_format($totalImporte, 0, ',', '.') }}€
+                            title="{{ number_format($totalImporte, 2, ',', '.') }}&euro;">
+                            {{ number_format($totalImporte, 0, ',', '.') }}&euro;
                         </p>
                     </div>
 
@@ -161,7 +159,7 @@
                         </div>
                         <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2 font-medium">Importe Medio</p>
                         <p class="text-3xl font-mono text-teal-400 font-light tracking-tight truncate">
-                            {{ number_format($importeMedio, 0, ',', '.') }}€
+                            {{ number_format($importeMedio, 0, ',', '.') }}&euro;
                         </p>
                     </div>
                 </div>
@@ -182,7 +180,7 @@
                                     <div class="flex justify-between items-end mb-1">
                                         <span class="font-mono text-neutral-400 text-sm">{{ $anual->year }}</span>
                                         <span
-                                            class="font-mono text-neutral-200 text-sm">{{ number_format($anual->total, 0, ',', '.') }}€</span>
+                                            class="font-mono text-neutral-200 text-sm">{{ number_format($anual->total, 0, ',', '.') }}&euro;</span>
                                     </div>
                                     <div class="h-1.5 w-full bg-neutral-800 rounded-full overflow-hidden">
                                         <div class="h-full bg-gradient-to-r from-sky-500 to-emerald-500 rounded-full group-hover:brightness-125 transition-all duration-500 ease-out"
@@ -205,10 +203,6 @@
                         Tienen el mismo identificador pero distinto nombre.
                     </p>
 
-                    @php
-                        $relatedCompanies = App\Models\Empresa::where('identificador', $empresa->identificador)->whereNot('id', $empresa->id)->get();
-                       @endphp
-
                     @foreach($relatedCompanies as $relatedCompany)
                         <div
                             class="flex items-center gap-2 p-1 px-2 mt-2 border border-neutral-800 rounded-lg hover:bg-neutral-800 transition-colors">
@@ -220,12 +214,11 @@
                             </a>
                         </div>
                     @endforeach
-                    
+
                     @if ($relatedCompanies->isEmpty())
-                        <p class="text-center italic text-xs">No hay empresas relacionadas</p>
+                        <p class="text-center italic text-xs text-neutral-500">No hay empresas relacionadas</p>
                     @endif
                 </div>
             </div>
         </div>
-    </div>
 @endsection

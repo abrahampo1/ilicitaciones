@@ -61,6 +61,15 @@ class ClaudeClient
                 ]],
             ]);
 
+        // Error de autenticación: mensaje accionable en vez del stack trace crudo.
+        if (in_array($resp->status(), [401, 403], true)) {
+            throw new RuntimeException(
+                "Anthropic rechazó la autenticación (HTTP {$resp->status()}): ANTHROPIC_API_KEY "
+                .'inválida, vacía o sin permisos. Revisa .env en el servidor y, si la config está '
+                .'cacheada, ejecuta `php artisan config:clear` y `php artisan queue:restart`.'
+            );
+        }
+
         $resp->throw();
 
         $bloque = collect($resp->json('content', []))->firstWhere('type', 'tool_use');

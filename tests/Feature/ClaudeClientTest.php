@@ -61,3 +61,10 @@ it('falla si no hay API key', function () {
     expect(fn () => (new ClaudeClient)->redactar('SYSTEM', []))
         ->toThrow(RuntimeException::class);
 });
+
+it('da un mensaje claro ante un 401 de autenticación', function () {
+    Http::fake(['*' => Http::response(['error' => ['type' => 'authentication_error']], 401)]);
+
+    expect(fn () => (new ClaudeClient)->redactar('SYSTEM', []))
+        ->toThrow(RuntimeException::class, 'ANTHROPIC_API_KEY');
+});

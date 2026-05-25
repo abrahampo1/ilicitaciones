@@ -5,6 +5,7 @@ use App\Models\Adjudicacion;
 use App\Models\Empresa;
 use App\Models\Licitacion;
 use App\Models\Organismo;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 function seedDatosBase(): array
@@ -96,6 +97,19 @@ it('persiste las estadisticas globales del home', function () {
 
     $tops = json_decode(DB::table('estadisticas')->where('clave', 'home_top_empresas')->value('valor'), true);
     expect($tops)->toHaveCount(2); // empZ (sin adj) queda fuera
+});
+
+it('invalida los caches de listados al recalcular', function () {
+    seedDatosBase();
+
+    // Simula una página de listado cacheada con datos antiguos (p.ej. en cero).
+    Cache::put('empresas_abc123', 'stale', 3600);
+    Cache::put('organismos_xyz789', 'stale', 3600);
+
+    (new RecalcularEstadisticas)->handle();
+
+    expect(Cache::has('empresas_abc123'))->toBeFalse()
+        ->and(Cache::has('organismos_xyz789'))->toBeFalse();
 });
 
 it('es idempotente: dos ejecuciones dan el mismo resultado', function () {

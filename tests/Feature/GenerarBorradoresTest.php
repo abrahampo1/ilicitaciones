@@ -57,6 +57,21 @@ it('crea un borrador y marca el candidato como generado', function () {
         ->and($cand->cooldown_until)->not->toBeNull();
 });
 
+it('usa OpenAI (gpt-5) cuando se indica ese proveedor', function () {
+    config(['services.openai' => ['key' => 'sk-test', 'base_url' => 'https://api.openai.com', 'model' => 'gpt-5', 'max_tokens' => 2000, 'timeout' => 60]]);
+    $id = candidato();
+
+    Http::fake(['api.openai.com/*' => Http::response(['choices' => [['message' => ['content' => json_encode([
+        'title' => 'Titular GPT', 'dek' => 'Dek', 'body' => 'La empresa concentró 720.000 € (72%).',
+        'suggested_section' => 'alertas', 'confidence' => 0.9,
+    ])]]]])]);
+
+    GenerarBorradorArticulo::dispatchSync($id, 'openai');
+
+    expect(Article::where('title', 'Titular GPT')->exists())->toBeTrue();
+    Http::assertSent(fn ($r) => str_contains($r->url(), 'api.openai.com'));
+});
+
 it('NO crea artículo si el FactChecker detecta una cifra inventada', function () {
     $id = candidato();
 

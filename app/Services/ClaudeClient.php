@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\LLM\ArticleDrafter;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
@@ -11,7 +12,7 @@ use RuntimeException;
  * Cliente mínimo de la API Messages de Anthropic (sin SDK oficial). Fuerza salida
  * estructurada vía tool-use y cachea el system prompt largo (prompt caching).
  */
-class ClaudeClient
+class ClaudeClient implements ArticleDrafter
 {
     /** @var array<string,mixed> */
     private array $cfg;

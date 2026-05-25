@@ -15,6 +15,7 @@ class GenerarBorradores extends Command
     protected $signature = 'app:generar-borradores
                             {--limit= : Máximo de candidatos a procesar en esta pasada}
                             {--min-score= : Score mínimo}
+                            {--provider= : Proveedor LLM (anthropic|openai); por defecto el de config}
                             {--dry-run : Solo listar, sin encolar}';
 
     protected $description = 'Genera borradores de artículos con Claude para los candidatos pendientes';
@@ -60,7 +61,7 @@ class GenerarBorradores extends Command
 
             // Marca 'generando' (evita doble proceso) y encola el job por candidato.
             DB::table('story_candidates')->where('id', $c->id)->update(['estado' => 'generando', 'updated_at' => now()]);
-            GenerarBorradorArticulo::dispatch($c->id);
+            GenerarBorradorArticulo::dispatch($c->id, $this->option('provider') ?: null);
         }
 
         $accion = $this->option('dry-run') ? 'listados' : 'encolados';

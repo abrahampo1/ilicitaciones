@@ -4,6 +4,9 @@ return [
     // Email de contacto para envío de información / avisos editoriales.
     'contacto' => env('PERIODICO_CONTACTO', 'ilicitaciones@pm.me'),
 
+    // Proveedor LLM para redactar borradores: 'anthropic' (Claude) | 'openai' (GPT-5).
+    'llm_provider' => env('PERIODICO_LLM_PROVIDER', 'anthropic'),
+
     // Detectores activos (clave = tipo de StoryCandidate).
     'detectores_activos' => [
         'adjudicatario_unico',

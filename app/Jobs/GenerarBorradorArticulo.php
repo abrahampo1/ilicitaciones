@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Services\ArticleWriter;
-use App\Services\ClaudeClient;
 use App\Services\FactChecker;
+use App\Services\LLM\DrafterFactory;
 use App\Services\PromptBuilder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Redacta el borrador de un candidato con Claude, verifica las cifras y crea el Article.
- * Idempotente: solo procesa candidatos en estado 'generando'.
+ * Redacta el borrador de un candidato con el proveedor LLM elegido (Claude u OpenAI),
+ * verifica las cifras y crea el Article. Idempotente: solo procesa 'generando'.
  */
 class GenerarBorradorArticulo implements ShouldBeUnique, ShouldQueue
 {
@@ -29,14 +29,14 @@ class GenerarBorradorArticulo implements ShouldBeUnique, ShouldQueue
 
     public array $backoff = [60, 300];
 
-    public function __construct(public int $candidateId) {}
+    public function __construct(public int $candidateId, public ?string $provider = null) {}
 
     public function uniqueId(): string
     {
         return 'borrador-'.$this->candidateId;
     }
 
-    public function handle(ClaudeClient $claude, PromptBuilder $prompts, FactChecker $checker, ArticleWriter $writer): void
+    public function handle(DrafterFactory $drafters, PromptBuilder $prompts, FactChecker $checker, ArticleWriter $writer): void
     {
         $candidate = DB::table('story_candidates')->where('id', $this->candidateId)->first();
 
@@ -46,7 +46,7 @@ class GenerarBorradorArticulo implements ShouldBeUnique, ShouldQueue
 
         $payload = json_decode($candidate->payload, true) ?: [];
 
-        $result = $claude->redactar($prompts->system($candidate->tipo), $payload);
+        $result = $drafters->make($this->provider)->redactar($prompts->system($candidate->tipo), $payload);
 
         // Anti-alucinación: ninguna cifra grande del cuerpo puede faltar del payload.
         if (! $checker->verificar($result['body'] ?? '', $payload)) {

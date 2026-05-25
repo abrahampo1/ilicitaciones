@@ -175,7 +175,7 @@
                         <p class="font-mono text-emerald-400 group-hover:text-emerald-300 transition-colors">
                             {{ number_format($organismo->total_importe ?? 0, 0, ',', '.') }}&euro;
                         </p>
-                        <p class="text-xs text-neutral-400 mt-1">{{ $organismo->licitaciones_count }} licit.</p>
+                        <p class="text-xs text-neutral-400 mt-1">{{ $organismo->total_licitaciones }} licit.</p>
                     </div>
                 </div>
 

@@ -6,6 +6,7 @@ use App\Models\Categoria;
 use App\Models\Licitacion;
 use App\Models\Organismo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrganismoController extends Controller
 {
@@ -17,7 +18,7 @@ class OrganismoController extends Controller
             $query->where('nombre', 'like', "%{$search}%");
         }
 
-        if ($request->has('provincia') && $request->input('provincia') !== '') {
+        if ($request->filled('provincia')) {
             $query->where('provincia', $request->input('provincia'));
         }
 
@@ -25,25 +26,22 @@ class OrganismoController extends Controller
         $cacheKey = "organismos_{$filterHash}";
 
         $organismos = cache()->remember($cacheKey, 3600, function () use ($query, $request) {
-            $baseQuery = $query
-                ->select('organismos.*')
-                ->withCount('licitaciones')
-                ->withSum('licitaciones as total_importe', 'importe_total');
-
-            if ($request->has('importe_min') && $request->input('importe_min') !== '') {
-                $baseQuery->having('total_importe', '>=', (float) $request->input('importe_min'));
+            // total_importe / total_licitaciones son columnas precomputadas e indexadas:
+            // sin withCount/withSum (subconsultas) en cada request.
+            if ($request->filled('importe_min')) {
+                $query->where('total_importe', '>=', (float) $request->input('importe_min'));
             }
-            if ($request->has('importe_max') && $request->input('importe_max') !== '') {
-                $baseQuery->having('total_importe', '<=', (float) $request->input('importe_max'));
+            if ($request->filled('importe_max')) {
+                $query->where('total_importe', '<=', (float) $request->input('importe_max'));
             }
 
-            if ($request->has('categoria_id') && $request->input('categoria_id') !== '') {
-                $baseQuery->whereHas('licitaciones', function ($q) use ($request) {
+            if ($request->filled('categoria_id')) {
+                $query->whereHas('licitaciones', function ($q) use ($request) {
                     $q->where('categoria_id', $request->input('categoria_id'));
                 });
             }
 
-            return $baseQuery
+            return $query
                 ->orderByDesc('total_importe')
                 ->paginate(15);
         });
@@ -60,7 +58,9 @@ class OrganismoController extends Controller
             ->orderBy('provincia')
             ->pluck('provincia'));
 
-        $categorias = cache()->remember('categorias_list', 3600, fn () => Categoria::orderBy('nombre')->get());
+        $categorias = cache()->remember('categorias_list', 3600, fn () => Categoria::whereIn('id', function ($q) {
+            $q->select('categoria_id')->from('licitacions')->whereNotNull('categoria_id');
+        })->orderBy('nombre')->get(['id', 'nombre']));
 
         return view('organismos', compact('organismos', 'totalOrganismos', 'totalVolumen', 'provincias', 'categorias'));
     }
@@ -70,16 +70,17 @@ class OrganismoController extends Controller
         $organismo = Organismo::findOrFail($id);
 
         $showData = cache()->remember("organismo_{$id}", 1800, function () use ($organismo) {
-            $totalLicitaciones = $organismo->licitaciones()->count();
-            $totalImporte = $organismo->licitaciones()->sum('importe_total');
+            // Totales desde columnas precomputadas.
+            $totalLicitaciones = (int) $organismo->total_licitaciones;
+            $totalImporte = (float) $organismo->total_importe;
             $licitaciones = $organismo->licitaciones()->latest('fecha_actualizacion')->limit(20)->get();
 
-            $inversionAnual = $organismo->licitaciones()
-                ->selectRaw('YEAR(fecha_actualizacion) as year, SUM(importe_total) as total')
-                ->whereNotNull('fecha_actualizacion')
-                ->groupBy('year')
+            // Serie anual precalculada.
+            $inversionAnual = DB::table('inversiones_anuales')
+                ->where('entity_type', 'organismo')
+                ->where('entity_id', $organismo->id)
                 ->orderByDesc('year')
-                ->get();
+                ->get(['year', 'total']);
 
             $maxYearlyTotal = $inversionAnual->max('total');
 

@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class RecalcularEstadisticasCommand extends Command
 {
     protected $signature = 'app:recalcular-estadisticas {--sync : Ejecutar en el momento en vez de encolar}';
+
     protected $description = 'Recalcula agregados (columnas, inversiones anuales, stats home)';
 
     public function handle(): int

@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasArticles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Empresa extends Model
 {
-    use HasFactory;
+    use HasArticles, HasFactory;
 
     protected $fillable = [
         'nombre',
-        'identificador'
+        'identificador',
     ];
 
     public function licitaciones()

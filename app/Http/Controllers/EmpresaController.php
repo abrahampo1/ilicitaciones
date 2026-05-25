@@ -130,6 +130,9 @@ class EmpresaController extends Controller
                 ->get();
         });
 
-        return view('empresa', array_merge(['empresa' => $empresa, 'relatedCompanies' => $relatedCompanies], $showData));
+        $analisis = cache()->remember("empresa_analisis_{$id}", 1800, fn () => $empresa->articles()
+            ->published()->latest('published_at')->limit(5)->get());
+
+        return view('empresa', array_merge(['empresa' => $empresa, 'relatedCompanies' => $relatedCompanies, 'analisis' => $analisis], $showData));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\RecalcularEstadisticas;
+use App\Models\Article;
 use App\Models\Licitacion;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +26,16 @@ class HomeController extends Controller
                 ->get();
         });
 
-        return view('home', compact('stats', 'topEmpresas', 'topOrganismos', 'ultimasLicitaciones'));
+        // Últimos análisis publicados. Cacheado 300s; se invalida al publicar (Cache::flush).
+        $ultimosAnalisis = cache()->remember('home_analisis_recientes', 300, function () {
+            return Article::published()
+                ->select('title', 'slug', 'section', 'dek', 'published_at')
+                ->latest('published_at')
+                ->limit(4)
+                ->get();
+        });
+
+        return view('home', compact('stats', 'topEmpresas', 'topOrganismos', 'ultimasLicitaciones', 'ultimosAnalisis'));
     }
 
     private function fromEstadisticas(string $clave, bool $assoc = false)

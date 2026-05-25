@@ -21,11 +21,12 @@ use Illuminate\Support\Facades\DB;
  * Se ejecuta tras cada importación y de forma programada. Es idempotente y
  * único en cola (no se solapan dos recálculos).
  */
-class RecalcularEstadisticas implements ShouldQueue, ShouldBeUnique
+class RecalcularEstadisticas implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 1800;
+
     public int $tries = 1;
 
     public function uniqueId(): string

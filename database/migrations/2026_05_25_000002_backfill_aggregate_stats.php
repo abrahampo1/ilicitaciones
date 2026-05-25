@@ -3,7 +3,8 @@
 use App\Jobs\RecalcularEstadisticas;
 use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Rellena los agregados precomputados (columnas, inversiones_anuales,
      * estadisticas) en el momento de migrar.

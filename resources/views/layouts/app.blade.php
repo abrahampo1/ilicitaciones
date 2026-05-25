@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- Google Tag Manager --}}
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-5FZDH2L7');</script>
+    {{-- End Google Tag Manager --}}
+
     {{-- SEO & Meta Tags --}}
     <title>@yield('meta_title', 'I-Licitaciones - Buscador de Licitaciones del Estado')</title>
     <meta name="description" content="@yield('meta_description', 'Plataforma avanzada para la búsqueda, visualización y análisis de licitaciones del sector público en España. Información detallada de organismos y adjudicaciones.')">
@@ -35,6 +43,9 @@
     {{-- Pagination SEO --}}
     @stack('pagination-links')
 
+    {{-- Feed RSS --}}
+    <link rel="alternate" type="application/rss+xml" title="I-Licitaciones · Análisis" href="{{ route('analisis.feed') }}" />
+
     {{-- Scripts & Styles --}}
     @vite('resources/css/app.css')
 
@@ -43,6 +54,11 @@
 </head>
 
 <body class="bg-neutral-900 text-neutral-100 font-serif min-h-screen flex flex-col">
+    {{-- Google Tag Manager (noscript) --}}
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5FZDH2L7"
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    {{-- End Google Tag Manager (noscript) --}}
+
     {{-- Skip link para accesibilidad --}}
     <a href="#contenido-principal"
         class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-neutral-100 focus:text-neutral-900 focus:px-4 focus:py-2 focus:rounded hidden">
@@ -63,6 +79,8 @@
                         class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('organismos', 'organismo.show') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">Organismos</a>
                     <a href="{{ route('empresas') }}"
                         class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('empresas', 'empresa.show') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">Empresas</a>
+                    <a href="{{ route('analisis.index') }}"
+                        class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('analisis.*') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">Análisis</a>
                     <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" rel="noopener noreferrer"
                         class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50 transition-colors">GitHub</a>
                 </nav>
@@ -84,11 +102,13 @@
     <footer class="border-t border-neutral-800 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
-                <p>Datos de contratación pública en España</p>
+                <p>Datos de contratación pública en España · <a href="mailto:{{ config('periodico.contacto') }}" class="hover:text-neutral-300 transition-colors">{{ config('periodico.contacto') }}</a></p>
                 <nav class="flex gap-4" aria-label="Navegación del pie de página">
                     <a href="{{ route('home') }}" class="hover:text-neutral-300 transition-colors">Inicio</a>
                     <a href="{{ route('organismos') }}" class="hover:text-neutral-300 transition-colors">Organismos</a>
                     <a href="{{ route('empresas') }}" class="hover:text-neutral-300 transition-colors">Empresas</a>
+                    <a href="{{ route('analisis.index') }}" class="hover:text-neutral-300 transition-colors">Análisis</a>
+                    <a href="{{ route('analisis.feed') }}" class="hover:text-neutral-300 transition-colors">RSS</a>
                     <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" rel="noopener noreferrer" class="hover:text-neutral-300 transition-colors">GitHub</a>
                 </nav>
             </div>

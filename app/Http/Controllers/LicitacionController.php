@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Licitacion;
-use Illuminate\Support\Str;
 
 class LicitacionController extends Controller
 {
@@ -15,14 +14,17 @@ class LicitacionController extends Controller
 
         $parsedData = $this->parseDatosRaiz($licitacion->datos_raiz);
 
-        return view('licitacion', compact('licitacion', 'parsedData'));
+        $analisis = cache()->remember("licitacion_analisis_{$id}", 1800, fn () => $licitacion->articles()
+            ->published()->latest('published_at')->limit(5)->get());
+
+        return view('licitacion', compact('licitacion', 'parsedData', 'analisis'));
     }
 
     private function parseDatosRaiz($datosRaiz): array
     {
         $datos = is_string($datosRaiz) ? json_decode($datosRaiz, true) : $datosRaiz;
 
-        if (!$datos) {
+        if (! $datos) {
             return [
                 'statusCode' => null,
                 'docs' => [],
@@ -44,7 +46,9 @@ class LicitacionController extends Controller
         // Extract documents
         $docs = [];
         $addDoc = function ($ref, $type, $label) use (&$docs) {
-            if (!$ref) return;
+            if (! $ref) {
+                return;
+            }
             $items = isset($ref[0]) ? $ref : [$ref];
             foreach ($items as $item) {
                 if (isset($item['Attachment']['ExternalReference']['URI'])) {
@@ -96,7 +100,7 @@ class LicitacionController extends Controller
             $val = $dur['value'] ?? '';
             if ($val) {
                 $unitMap = ['ANN' => 'Años', 'MON' => 'Meses', 'DAY' => 'Días'];
-                $duration = $val . ' ' . ($unitMap[$unit] ?? $unit);
+                $duration = $val.' '.($unitMap[$unit] ?? $unit);
             }
         }
         if (isset($datos['ContractFolderStatus']['ProcurementProject']['ContractExtension']['OptionValidityPeriod']['Description'])) {

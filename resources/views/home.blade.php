@@ -141,6 +141,37 @@
         </div>
     </div>
 
+    <!-- Análisis recientes -->
+    @if ($ultimosAnalisis->isNotEmpty())
+        <div class="mt-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-light">
+                    <span class="text-emerald-400">&#9998;</span> Análisis recientes
+                </h2>
+                <a href="{{ route('analisis.index') }}" class="text-xs text-neutral-400 hover:text-emerald-400 transition-colors">
+                    Ver todos &rarr;
+                </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach ($ultimosAnalisis as $analisis)
+                    <a href="{{ route('analisis.show', $analisis->slug) }}"
+                        class="group p-5 bg-neutral-800/30 border border-neutral-700/30 rounded-xl hover:bg-neutral-800/60 hover:border-neutral-600/50 transition-all duration-300">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-2 py-0.5 text-xs rounded-full {{ $analisis->section->color() }}">{{ $analisis->section->label() }}</span>
+                            <span class="text-xs text-neutral-500">{{ \Carbon\Carbon::parse($analisis->published_at)->format('d/m/Y') }}</span>
+                        </div>
+                        <p class="font-light text-neutral-200 group-hover:text-white transition-colors line-clamp-2 mb-1">
+                            {{ $analisis->title }}
+                        </p>
+                        @if ($analisis->dek)
+                            <p class="text-xs text-neutral-400 line-clamp-2">{{ $analisis->dek }}</p>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <!-- Recent Licitaciones -->
     <div class="mt-12">
         <div class="flex items-center justify-between mb-6">

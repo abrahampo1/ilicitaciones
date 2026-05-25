@@ -244,6 +244,8 @@
                     @endif
                 </div>
 
+                @include('partials.analisis_relacionados', ['analisis' => $analisis])
+
             </div>
         </div>
 @endsection

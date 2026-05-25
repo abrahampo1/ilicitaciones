@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\RecalcularEstadisticas;
 use App\Models\Adjudicacion;
 use App\Models\Categoria;
 use App\Models\Empresa;
@@ -44,6 +45,10 @@ class ImportarLicitaciones extends Command
         }
 
         $this->info("\n✅ Importación completada.");
+
+        // Recalcular agregados (columnas, inversiones anuales, stats home) en cola.
+        $this->info("→ Encolando recálculo de estadísticas...");
+        RecalcularEstadisticas::dispatch();
     }
 
     private function preloadCaches(): void

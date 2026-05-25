@@ -2,44 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Empresa;
+use App\Jobs\RecalcularEstadisticas;
 use App\Models\Licitacion;
-use App\Models\Organismo;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $stats = cache()->remember('home_stats', 3600, function () {
-            return [
-                'latestDate' => Licitacion::orderByDesc('fecha_actualizacion')->value('fecha_actualizacion'),
-                'totalImporte' => Licitacion::sum('importe_total'),
-                'conteoLicitaciones' => Licitacion::count(),
-                'totalOrganismos' => Organismo::count(),
-                'totalEmpresas' => Empresa::count(),
-            ];
-        });
-
-        $topEmpresas = cache()->remember('home_top_empresas', 3600, function () {
-            return DB::table('adjudicacions')
-                ->join('empresas', 'adjudicacions.empresa_id', '=', 'empresas.id')
-                ->select('empresas.id as empresa_id', 'empresas.nombre', DB::raw('SUM(adjudicacions.importe) as total_importe'))
-                ->groupBy('empresas.id', 'empresas.nombre')
-                ->orderByDesc('total_importe')
-                ->limit(10)
-                ->get();
-        });
-
-        $topOrganismos = cache()->remember('home_top_organismos', 3600, function () {
-            return DB::table('licitacions')
-                ->join('organismos', 'licitacions.organismo_id', '=', 'organismos.id')
-                ->select('organismos.id as organismo_id', 'organismos.nombre', DB::raw('SUM(licitacions.importe_total) as total_importe'))
-                ->groupBy('organismos.id', 'organismos.nombre')
-                ->orderByDesc('total_importe')
-                ->limit(10)
-                ->get();
-        });
+        // Stats globales y tops salen de la tabla `estadisticas` (precalculada por
+        // el job). Si aún no existe (primer arranque), se calcula una vez y se encola
+        // el job para los siguientes; nunca se hace GROUP BY pesado en el request.
+        $stats = $this->fromEstadisticas('home_stats', true);
+        $topEmpresas = $this->fromEstadisticas('home_top_empresas');
+        $topOrganismos = $this->fromEstadisticas('home_top_organismos');
 
         $ultimasLicitaciones = cache()->remember('home_ultimas_licitaciones', 300, function () {
             return Licitacion::select('id', 'titulo', 'importe_total', 'estado', 'fecha_actualizacion', 'organismo_id')
@@ -50,5 +26,30 @@ class HomeController extends Controller
         });
 
         return view('home', compact('stats', 'topEmpresas', 'topOrganismos', 'ultimasLicitaciones'));
+    }
+
+    private function fromEstadisticas(string $clave, bool $assoc = false)
+    {
+        $row = DB::table('estadisticas')->where('clave', $clave)->value('valor');
+
+        if ($row !== null) {
+            return json_decode($row, $assoc);
+        }
+
+        // Cold start: recalcular en cola y servir un valor mínimo sin bloquear.
+        RecalcularEstadisticas::dispatch();
+
+        if ($assoc) {
+            return [
+                'latestDate' => null,
+                'totalImporte' => 0,
+                'conteoLicitaciones' => 0,
+                'totalOrganismos' => 0,
+                'totalEmpresas' => 0,
+                'totalVolumenAdjudicado' => 0,
+            ];
+        }
+
+        return collect();
     }
 }

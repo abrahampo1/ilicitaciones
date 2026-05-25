@@ -12,8 +12,64 @@ class EmpresaController extends Controller
 {
     public function index(Request $request)
     {
+        $categoriaId = $request->input('categoria_id');
+        $tieneCategoria = $categoriaId !== null && $categoriaId !== '';
+
+        // Camino rápido: lee columnas precomputadas (total_importe indexado).
+        // Solo el filtro por categoría necesita el GROUP BY en vivo.
+        if ($tieneCategoria) {
+            $query = $this->categoriaQuery($request, $categoriaId);
+        } else {
+            $query = $this->fastQuery($request);
+        }
+
+        $filterHash = md5(json_encode(array_filter($request->only(['page', 'search', 'importe_min', 'importe_max', 'categoria_id']))));
+        $cacheKey = "empresas_{$filterHash}";
+
+        $empresas = cache()->remember($cacheKey, 3600, function () use ($query) {
+            return $query->orderByDesc('total_importe')->paginate(15);
+        });
+
+        $empresas->withQueryString();
+
+        $totalVolumen = cache()->remember('adjudicaciones_sum_total', 3600, fn () => Adjudicacion::sum('importe'));
+        $totalEmpresas = cache()->remember('empresas_count', 3600, fn () => Empresa::count());
+        $categorias = cache()->remember('categorias_list', 3600, fn () => Categoria::whereIn('id', function ($q) {
+            $q->select('categoria_id')->from('licitacions')->whereNotNull('categoria_id');
+        })->orderBy('nombre')->get(['id', 'nombre']));
+
+        return view('empresas', compact('empresas', 'totalVolumen', 'totalEmpresas', 'categorias'));
+    }
+
+    private function fastQuery(Request $request)
+    {
+        $query = DB::table('empresas')
+            ->select('empresas.id', 'empresas.nombre', 'empresas.identificador', 'empresas.total_importe', 'empresas.total_adjudicaciones')
+            ->where('empresas.total_adjudicaciones', '>', 0);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('empresas.nombre', 'like', "%{$search}%")
+                    ->orWhere('empresas.identificador', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('importe_min')) {
+            $query->where('empresas.total_importe', '>=', (float) $request->input('importe_min'));
+        }
+        if ($request->filled('importe_max')) {
+            $query->where('empresas.total_importe', '<=', (float) $request->input('importe_max'));
+        }
+
+        return $query;
+    }
+
+    private function categoriaQuery(Request $request, $categoriaId)
+    {
         $query = DB::table('adjudicacions')
             ->join('empresas', 'adjudicacions.empresa_id', '=', 'empresas.id')
+            ->join('licitacions', 'adjudicacions.licitacion_id', '=', 'licitacions.id')
+            ->where('licitacions.categoria_id', $categoriaId)
             ->select(
                 'empresas.id',
                 'empresas.nombre',
@@ -30,32 +86,14 @@ class EmpresaController extends Controller
             });
         }
 
-        if ($request->has('importe_min') && $request->input('importe_min') !== '') {
+        if ($request->filled('importe_min')) {
             $query->havingRaw('SUM(adjudicacions.importe) >= ?', [(float) $request->input('importe_min')]);
         }
-        if ($request->has('importe_max') && $request->input('importe_max') !== '') {
+        if ($request->filled('importe_max')) {
             $query->havingRaw('SUM(adjudicacions.importe) <= ?', [(float) $request->input('importe_max')]);
         }
 
-        if ($request->has('categoria_id') && $request->input('categoria_id') !== '') {
-            $query->leftJoin('licitacions', 'adjudicacions.licitacion_id', '=', 'licitacions.id')
-                ->where('licitacions.categoria_id', $request->input('categoria_id'));
-        }
-
-        $filterHash = md5(json_encode(array_filter($request->only(['page', 'search', 'importe_min', 'importe_max', 'categoria_id']))));
-        $cacheKey = "empresas_{$filterHash}";
-
-        $empresas = cache()->remember($cacheKey, 3600, function () use ($query) {
-            return $query->orderByDesc('total_importe')->paginate(15);
-        });
-
-        $empresas->withQueryString();
-
-        $totalVolumen = cache()->remember('adjudicaciones_sum_total', 3600, fn () => Adjudicacion::sum('importe'));
-        $totalEmpresas = cache()->remember('empresas_count', 3600, fn () => Empresa::count());
-        $categorias = cache()->remember('categorias_list', 3600, fn () => Categoria::orderBy('nombre')->get());
-
-        return view('empresas', compact('empresas', 'totalVolumen', 'totalEmpresas', 'categorias'));
+        return $query;
     }
 
     public function show($id)
@@ -63,24 +101,23 @@ class EmpresaController extends Controller
         $empresa = Empresa::findOrFail($id);
 
         $showData = cache()->remember("empresa_{$id}", 1800, function () use ($empresa) {
-            $adjudicacionesQuery = Adjudicacion::where('empresa_id', $empresa->id);
-
-            $totalImporte = (clone $adjudicacionesQuery)->sum('importe');
-            $totalAdjudicaciones = (clone $adjudicacionesQuery)->count();
+            // Totales desde columnas precomputadas (sin SUM/COUNT en request).
+            $totalImporte = (float) $empresa->total_importe;
+            $totalAdjudicaciones = (int) $empresa->total_adjudicaciones;
             $importeMedio = $totalAdjudicaciones > 0 ? $totalImporte / $totalAdjudicaciones : 0;
 
-            $adjudicaciones = $adjudicacionesQuery
+            $adjudicaciones = Adjudicacion::where('empresa_id', $empresa->id)
                 ->with('licitacion.organismo')
                 ->orderByDesc('fecha_adjudicacion')
                 ->limit(50)
                 ->get();
 
-            $inversionAnual = Adjudicacion::where('empresa_id', $empresa->id)
-                ->selectRaw('YEAR(fecha_adjudicacion) as year, SUM(importe) as total')
-                ->whereNotNull('fecha_adjudicacion')
-                ->groupBy('year')
+            // Serie anual precalculada en inversiones_anuales.
+            $inversionAnual = DB::table('inversiones_anuales')
+                ->where('entity_type', 'empresa')
+                ->where('entity_id', $empresa->id)
                 ->orderByDesc('year')
-                ->get();
+                ->get(['year', 'total']);
 
             $maxYearlyTotal = $inversionAnual->max('total');
 

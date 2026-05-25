@@ -171,11 +171,9 @@ class RecalcularEstadisticas implements ShouldQueue, ShouldBeUnique
 
     private function limpiarCaches(): void
     {
-        foreach (['home_stats', 'home_top_empresas', 'home_top_organismos',
-                  'home_ultimas_licitaciones', 'adjudicaciones_sum_total',
-                  'empresas_count', 'organismos_count', 'licitaciones_sum_total',
-                  'categorias_list', 'organismos_provincias'] as $key) {
-            Cache::forget($key);
-        }
+        // Los listados se cachean con clave por hash de filtros (empresas_*, organismos_*),
+        // imposibles de enumerar. Tras recalcular hay que invalidarlos todos para que no
+        // queden páginas con los agregados antiguos (p.ej. en cero antes del primer cálculo).
+        Cache::flush();
     }
 }

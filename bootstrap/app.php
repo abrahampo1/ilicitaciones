@@ -1,6 +1,5 @@
 <?php
 
-use App\Jobs\RecalcularEstadisticas;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,7 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule): void {
         // Mantiene los agregados frescos aunque no se importe (red de seguridad).
-        $schedule->job(new RecalcularEstadisticas)
+        // Se ejecuta en el propio proceso del scheduler (--sync): no requiere worker
+        // de cola, solo el cron de `schedule:run`.
+        $schedule->command('app:recalcular-estadisticas --sync')
             ->hourly()
             ->withoutOverlapping();
     })

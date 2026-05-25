@@ -46,9 +46,12 @@ class ImportarLicitaciones extends Command
 
         $this->info("\n✅ Importación completada.");
 
-        // Recalcular agregados (columnas, inversiones anuales, stats home) en cola.
-        $this->info("→ Encolando recálculo de estadísticas...");
-        RecalcularEstadisticas::dispatch();
+        // Recalcular agregados (columnas, inversiones anuales, stats home).
+        // Síncrono: garantiza datos frescos al terminar la importación aunque no
+        // haya ningún worker de cola corriendo.
+        $this->info("→ Recalculando estadísticas...");
+        RecalcularEstadisticas::dispatchSync();
+        $this->info("  ✓ Estadísticas actualizadas.");
     }
 
     private function preloadCaches(): void

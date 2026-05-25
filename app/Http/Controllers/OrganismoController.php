@@ -87,6 +87,9 @@ class OrganismoController extends Controller
             return compact('totalLicitaciones', 'totalImporte', 'licitaciones', 'inversionAnual', 'maxYearlyTotal');
         });
 
-        return view('organismo', array_merge(['organismo' => $organismo], $showData));
+        $analisis = cache()->remember("organismo_analisis_{$id}", 1800, fn () => $organismo->articles()
+            ->published()->latest('published_at')->limit(5)->get());
+
+        return view('organismo', array_merge(['organismo' => $organismo, 'analisis' => $analisis], $showData));
     }
 }

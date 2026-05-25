@@ -12,6 +12,7 @@
         "php": "^8.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "league/commonmark": "^2.8",
         "noki/laravel-xml-converter": "^1.0"
     },
     "require-dev": {

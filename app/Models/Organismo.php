@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasArticles;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Organismo extends Model
 {
-    use HasFactory;
+    use HasArticles, HasFactory;
 
     protected $fillable = [
         'nombre',
@@ -20,7 +21,7 @@ class Organismo extends Model
         'contacto_telefono',
         'contacto_fax',
         'contacto_email',
-        'sitio_web'
+        'sitio_web',
     ];
 
     public function licitaciones()

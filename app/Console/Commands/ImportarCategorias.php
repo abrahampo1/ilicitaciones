@@ -31,8 +31,9 @@ class ImportarCategorias extends Command
         // vamos a descargar el xml y lo importamos a la base de datos
         $xml = simplexml_load_file('https://contrataciondelestado.es/codice/cl/1.04/CPV2007-1.04.gc');
 
-        if (!$xml) {
+        if (! $xml) {
             $this->error('No se pudo cargar el archivo XML.');
+
             return;
         }
 
@@ -40,7 +41,7 @@ class ImportarCategorias extends Command
 
         $xml = $xml->SimpleCodeList->Row;
 
-        $this->info($xml->count() . ' categorias encontradas.');
+        $this->info($xml->count().' categorias encontradas.');
 
         $progressBar = $this->output->createProgressBar($xml->count());
         $progressBar->start();

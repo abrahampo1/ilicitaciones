@@ -18,9 +18,19 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('app:recalcular-estadisticas --sync')
             ->hourly()
             ->withoutOverlapping();
+
+        // Periódico de datos: agregados + detección (--sync, sin worker) y generación
+        // de borradores con IA (encola jobs; requiere worker de cola).
+        $schedule->command('app:recalcular-agregados-dimension --sync')
+            ->dailyAt('03:30')->withoutOverlapping();
+        $schedule->command('app:detectar-historias')
+            ->dailyAt('04:00')->withoutOverlapping();
+        $schedule->command('app:generar-borradores')
+            ->dailyAt('04:30')->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Invitados al panel van al login de la redacción (no existe ruta 'login' global).
+        $middleware->redirectGuestsTo(fn () => route('admin.login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

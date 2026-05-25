@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\RecalcularAgregadosDimension;
 use App\Jobs\RecalcularEstadisticas;
 use App\Models\Adjudicacion;
 use App\Models\Categoria;
@@ -17,25 +18,28 @@ use Str;
 class ImportarLicitaciones extends Command
 {
     protected $signature = 'app:importar-licitaciones {--batch-size=500 : Tamaño del batch para inserciones} {--all : Importar todas las licitaciones} {--from-year=2012 : Importar a partir de x año}';
+
     protected $description = 'Importar licitaciones desde una fuente externa (optimizado)';
 
     // Cachés en memoria para evitar consultas repetidas
     private array $categoriasCache = [];
+
     private array $organismosCache = [];
+
     private array $empresasCache = [];
 
     public function handle()
     {
-        $this->info("Iniciando la importación de licitaciones (versión optimizada)...");
+        $this->info('Iniciando la importación de licitaciones (versión optimizada)...');
 
         // Pre-cargar cachés
-        $this->info("Cargando cachés en memoria...");
+        $this->info('Cargando cachés en memoria...');
         $this->preloadCaches();
 
         $all = $this->option('all');
 
-        if (!$all) {
-            $year = $this->ask("¿Que año deseas importar?", 2012);
+        if (! $all) {
+            $year = $this->ask('¿Que año deseas importar?', 2012);
             $this->importarLicitacion($year);
         } else {
             $fromYear = $this->option('from-year');
@@ -49,16 +53,17 @@ class ImportarLicitaciones extends Command
         // Recalcular agregados (columnas, inversiones anuales, stats home).
         // Síncrono: garantiza datos frescos al terminar la importación aunque no
         // haya ningún worker de cola corriendo.
-        $this->info("→ Recalculando estadísticas...");
+        $this->info('→ Recalculando estadísticas...');
         RecalcularEstadisticas::dispatchSync();
-        $this->info("  ✓ Estadísticas actualizadas.");
+        RecalcularAgregadosDimension::dispatchSync();
+        $this->info('  ✓ Estadísticas actualizadas.');
     }
 
     private function preloadCaches(): void
     {
         // Cargar todas las categorías en memoria
         $this->categoriasCache = Categoria::pluck('id', 'xml_id')->toArray();
-        $this->info("  - Categorías cargadas: " . count($this->categoriasCache));
+        $this->info('  - Categorías cargadas: '.count($this->categoriasCache));
 
         // Cargar organismos existentes (identificador + nombre -> id)
         Organismo::select('id', 'identificador', 'nombre')->chunk(10000, function ($organismos) {
@@ -67,7 +72,7 @@ class ImportarLicitaciones extends Command
                 $this->organismosCache[$key] = $org->id;
             }
         });
-        $this->info("  - Organismos cargados: " . count($this->organismosCache));
+        $this->info('  - Organismos cargados: '.count($this->organismosCache));
 
         // Cargar empresas existentes (identificador como clave única, nombre como fallback)
         Empresa::select('id', 'identificador', 'nombre')->chunk(10000, function ($empresas) {
@@ -76,7 +81,7 @@ class ImportarLicitaciones extends Command
                 $this->empresasCache[$key] = $emp->id;
             }
         });
-        $this->info("  - Empresas cargadas: " . count($this->empresasCache));
+        $this->info('  - Empresas cargadas: '.count($this->empresasCache));
     }
 
     private function makeOrganismoKey(?string $identificador, ?string $nombre): string
@@ -85,75 +90,80 @@ class ImportarLicitaciones extends Command
         if (empty($identificador) && empty($nombre)) {
             return Str::uuid()->toString();
         }
-        return md5(($identificador ?? '') . '|' . ($nombre ?? ''));
+
+        return md5(($identificador ?? '').'|'.($nombre ?? ''));
     }
 
     private function makeEmpresaKey(?string $identificador, ?string $nombre = null): string
     {
         // Para empresas: el identificador es único (mismo ID = misma empresa aunque nombre varíe)
         // Si no hay identificador, usar nombre como fallback
-        if (!empty($identificador)) {
+        if (! empty($identificador)) {
             return md5($identificador);
         }
-        if (!empty($nombre)) {
-            return md5('nombre:' . $nombre);
+        if (! empty($nombre)) {
+            return md5('nombre:'.$nombre);
         }
+
         return Str::uuid()->toString();
     }
 
-    function importarLicitacion($year)
+    public function importarLicitacion($year)
     {
         $url = $this->retrieveUrl($year);
         $this->info("\nImportando licitaciones del año {$year}");
         $filename = "licitaciones_{$year}.zip";
 
-        if (!Storage::disk('local')->exists('licitaciones')) {
+        if (! Storage::disk('local')->exists('licitaciones')) {
             Storage::disk('local')->makeDirectory('licitaciones');
         }
 
-        if (Storage::disk('local')->exists('licitaciones/' . $filename)) {
-            $this->info("  → Archivo ya descargado");
+        if (Storage::disk('local')->exists('licitaciones/'.$filename)) {
+            $this->info('  → Archivo ya descargado');
         } else {
-            $this->info("  → Descargando...");
+            $this->info('  → Descargando...');
             $file = file_get_contents($url);
-            Storage::disk('local')->put('licitaciones/' . $filename, $file);
+            Storage::disk('local')->put('licitaciones/'.$filename, $file);
         }
 
-        $filePath = Storage::disk('local')->path('licitaciones/' . $filename);
-        $extractPath = Storage::disk('local')->path('licitaciones/extract_' . $year);
+        $filePath = Storage::disk('local')->path('licitaciones/'.$filename);
+        $extractPath = Storage::disk('local')->path('licitaciones/extract_'.$year);
 
-        if (Storage::disk('local')->exists('licitaciones/extract_' . $year)) {
-            $this->info("  → Ya descomprimido");
+        if (Storage::disk('local')->exists('licitaciones/extract_'.$year)) {
+            $this->info('  → Ya descomprimido');
         } else {
-            Storage::disk('local')->makeDirectory('licitaciones/extract_' . $year);
+            Storage::disk('local')->makeDirectory('licitaciones/extract_'.$year);
             $zip = new \ZipArchive;
-            if ($zip->open($filePath) === TRUE) {
-                $this->info("  → Descomprimiendo...");
+            if ($zip->open($filePath) === true) {
+                $this->info('  → Descomprimiendo...');
                 $zip->extractTo($extractPath);
                 $zip->close();
             } else {
-                $this->error("No se pudo abrir el archivo zip.");
+                $this->error('No se pudo abrir el archivo zip.');
+
                 return;
             }
         }
 
-        $files = glob($extractPath . '/*.atom');
+        $files = glob($extractPath.'/*.atom');
         $batchSize = (int) $this->option('batch-size');
 
         foreach ($files as $fileIndex => $file) {
-            $this->info("  → Procesando archivo " . ($fileIndex + 1) . "/" . count($files));
+            $this->info('  → Procesando archivo '.($fileIndex + 1).'/'.count($files));
 
             $xmlContent = file_get_contents($file);
             $json = Convert::xmlToJson($xmlContent);
             $data = json_decode($json, true);
 
             $feed = $data['feed'] ?? null;
-            if (!$feed)
+            if (! $feed) {
                 continue;
+            }
 
             $entries = $feed['entry'] ?? [];
-            if (empty($entries))
+            if (empty($entries)) {
                 continue;
+            }
 
             // Procesar en batches
             $chunks = array_chunk($entries, $batchSize);
@@ -186,8 +196,8 @@ class ImportarLicitaciones extends Command
             $organismoKey = $this->makeOrganismoKey($organismoIdentificador, $organismoNombre);
 
             // Si el organismo no existe en caché, preparar para inserción
-            if (!isset($this->organismosCache[$organismoKey]) && $organismoNombre) {
-                if (!isset($organismosToInsert[$organismoKey])) {
+            if (! isset($this->organismosCache[$organismoKey]) && $organismoNombre) {
+                if (! isset($organismosToInsert[$organismoKey])) {
                     $organismosToInsert[$organismoKey] = [
                         'nombre' => $organismoNombre,
                         'identificador' => $organismoIdentificador,
@@ -212,8 +222,8 @@ class ImportarLicitaciones extends Command
             $empresaIdentificador = $empresaGanadora['PartyIdentification']['ID']['value'] ?? null;
             $empresaKey = $this->makeEmpresaKey($empresaIdentificador, $empresaNombre);
 
-            if (!isset($this->empresasCache[$empresaKey]) && $empresaNombre) {
-                if (!isset($empresasToInsert[$empresaKey])) {
+            if (! isset($this->empresasCache[$empresaKey]) && $empresaNombre) {
+                if (! isset($empresasToInsert[$empresaKey])) {
                     $empresasToInsert[$empresaKey] = [
                         'nombre' => $empresaNombre,
                         'identificador' => $empresaIdentificador,
@@ -227,7 +237,7 @@ class ImportarLicitaciones extends Command
         }
 
         // Insertar organismos nuevos en batch
-        if (!empty($organismosToInsert)) {
+        if (! empty($organismosToInsert)) {
             DB::table('organismos')->insertOrIgnore(array_values($organismosToInsert));
             // Recargar los nuevos IDs
             $newOrgs = Organismo::whereIn('identificador', array_column($organismosToInsert, 'identificador'))
@@ -240,7 +250,7 @@ class ImportarLicitaciones extends Command
         }
 
         // Insertar empresas nuevas en batch
-        if (!empty($empresasToInsert)) {
+        if (! empty($empresasToInsert)) {
             DB::table('empresas')->insertOrIgnore(array_values($empresasToInsert));
             // Recargar los nuevos IDs
             $newEmps = Empresa::whereIn('identificador', array_column($empresasToInsert, 'identificador'))
@@ -255,8 +265,9 @@ class ImportarLicitaciones extends Command
         // Ahora procesar licitaciones y adjudicaciones con los IDs en caché
         foreach ($entries as $entry) {
             $identificador = $entry['ContractFolderStatus']['ContractFolderID'] ?? null;
-            if (!$identificador)
+            if (! $identificador) {
                 continue;
+            }
 
             $organismo = $entry['ContractFolderStatus']['LocatedContractingParty']['Party'] ?? null;
             $organismoNombre = $organismo['PartyName']['Name'] ?? null;
@@ -311,7 +322,7 @@ class ImportarLicitaciones extends Command
         }
 
         // Upsert licitaciones en batch
-        if (!empty($licitacionesData)) {
+        if (! empty($licitacionesData)) {
             Licitacion::upsert(
                 $licitacionesData,
                 ['identificador', 'id_url'],
@@ -327,13 +338,13 @@ class ImportarLicitaciones extends Command
                     'categoria_id',
                     'organismo_id',
                     'datos_raiz',
-                    'updated_at'
+                    'updated_at',
                 ]
             );
         }
 
         // Obtener IDs de licitaciones para adjudicaciones
-        if (!empty($adjudicacionesData)) {
+        if (! empty($adjudicacionesData)) {
             $licitacionIds = Licitacion::whereIn('identificador', array_keys($adjudicacionesData))
                 ->pluck('id', 'identificador')
                 ->toArray();
@@ -346,7 +357,7 @@ class ImportarLicitaciones extends Command
                 }
             }
 
-            if (!empty($adjudicacionesToInsert)) {
+            if (! empty($adjudicacionesToInsert)) {
                 Adjudicacion::upsert(
                     $adjudicacionesToInsert,
                     ['licitacion_id', 'empresa_id'],
@@ -358,22 +369,23 @@ class ImportarLicitaciones extends Command
                         'descripcion',
                         'fecha_adjudicacion',
                         'fecha_comienzo',
-                        'updated_at'
+                        'updated_at',
                     ]
                 );
             }
         }
     }
 
-    function retrieveUrl($year)
+    public function retrieveUrl($year)
     {
-        return "https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3_" . $year . ".zip";
+        return 'https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3_'.$year.'.zip';
     }
 
     private function parseDate($date)
     {
-        if (!$date)
+        if (! $date) {
             return null;
+        }
         try {
             return \Carbon\Carbon::parse($date)->format('Y-m-d H:i:s');
         } catch (\Exception $e) {

@@ -219,6 +219,8 @@
                         <p class="text-center italic text-xs text-neutral-500">No hay empresas relacionadas</p>
                     @endif
                 </div>
+
+                @include('partials.analisis_relacionados', ['analisis' => $analisis])
             </div>
         </div>
 @endsection

@@ -106,34 +106,29 @@
         </div>
 
         <!-- Importes Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="relative group">
-                <div class="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl group-hover:border-amber-500/30 transition-colors">
-                    <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2">Presupuesto Base</p>
-                    <p class="text-2xl font-mono text-amber-400">
-                        {{ $licitacion->importe_estimado ? number_format($licitacion->importe_estimado, 2, ',', '.') . '&euro;' : '--' }}
-                    </p>
+        @php
+            $importes = [
+                ['label' => 'Presupuesto Base', 'value' => $licitacion->importe_estimado, 'glow' => 'from-amber-500/20',   'hover' => 'group-hover:border-amber-500/30',   'text' => 'text-amber-400',   'sym' => 'text-amber-500/60'],
+                ['label' => 'Sin Impuestos',    'value' => $licitacion->importe_final,    'glow' => 'from-teal-500/20',    'hover' => 'group-hover:border-teal-500/30',    'text' => 'text-teal-400',    'sym' => 'text-teal-500/60'],
+                ['label' => 'Importe Total',     'value' => $licitacion->importe_total,    'glow' => 'from-emerald-500/20', 'hover' => 'group-hover:border-emerald-500/30', 'text' => 'text-emerald-400', 'sym' => 'text-emerald-500/60'],
+            ];
+        @endphp
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 gap-4 mb-8">
+            @foreach ($importes as $importe)
+                <div class="relative group min-w-0">
+                    <div class="absolute inset-0 bg-gradient-to-br {{ $importe['glow'] }} to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl {{ $importe['hover'] }} transition-colors min-w-0">
+                        <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2">{{ $importe['label'] }}</p>
+                        @if ($importe['value'])
+                            <p class="font-mono tabular-nums leading-tight break-words {{ $importe['text'] }} text-2xl xl:text-lg">
+                                {{ number_format($importe['value'], 2, ',', '.') }}<span class="text-[0.65em] {{ $importe['sym'] }} ml-0.5">&euro;</span>
+                            </p>
+                        @else
+                            <p class="text-2xl font-mono text-neutral-600">&mdash;</p>
+                        @endif
+                    </div>
                 </div>
-            </div>
-            <div class="relative group">
-                <div class="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl group-hover:border-teal-500/30 transition-colors">
-                    <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2">Sin Impuestos</p>
-                    <p class="text-2xl font-mono text-teal-400">
-                        {{ $licitacion->importe_total ? number_format($licitacion->importe_final, 2, ',', '.') . '&euro;' : '--' }}
-                    </p>
-                </div>
-            </div>
-            <div class="relative group">
-                <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="relative p-6 bg-neutral-800/50 border border-neutral-700/50 rounded-2xl group-hover:border-emerald-500/30 transition-colors">
-                    <p class="text-neutral-400 text-xs uppercase tracking-wider mb-2">Importe Total</p>
-                    <p class="text-2xl font-mono text-emerald-400">
-                        {{ $licitacion->importe_final ? number_format($licitacion->importe_total, 2, ',', '.') . '&euro;' : '--' }}
-                    </p>
-                </div>
-            </div>
+            @endforeach
         </div>
 
         <!-- Fechas -->

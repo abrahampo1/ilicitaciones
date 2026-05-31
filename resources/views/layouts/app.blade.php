@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1758450566388837"
+     crossorigin="anonymous"></script>
+
     {{-- Google Tag Manager. data-cfasync="false" evita que Cloudflare Rocket Loader
          reescriba el type (a "<token>-text/javascript") y deje el script sin ejecutar,
          que es lo que impedía a Google detectar la etiqueta. --}}
@@ -17,6 +20,7 @@
     {{-- End Google Tag Manager --}}
 
     {{-- SEO & Meta Tags --}}
+    <meta name="google-adsense-account" content="ca-pub-1758450566388837">
     <title>@yield('meta_title', 'I-Licitaciones - Buscador de Licitaciones del Estado')</title>
     <meta name="description" content="@yield('meta_description', 'Plataforma avanzada para la búsqueda, visualización y análisis de licitaciones del sector público en España. Información detallada de organismos y adjudicaciones.')">
     <link rel="canonical" href="@yield('canonical', url()->current())" />

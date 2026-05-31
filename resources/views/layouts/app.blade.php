@@ -110,6 +110,16 @@
         <main id="contenido-principal" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             @yield('contenido')
         </main>
+
+        {{-- Bloque de anuncios (AdSense) --}}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+            <!-- ad-block-1 -->
+            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-1758450566388837"
+                data-ad-slot="2557928887" data-ad-format="auto" data-full-width-responsive="true"></ins>
+            <script>
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
     </div>
 
     <footer class="border-t border-neutral-800 mt-auto">

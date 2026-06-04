@@ -111,6 +111,11 @@
             @yield('contenido')
         </main>
 
+        {{-- Banner propio (cross-promo de leiro.net) --}}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+            <x-leiro-banner />
+        </div>
+
         {{-- Bloque de anuncios (AdSense) --}}
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
             <!-- ad-block-1 -->

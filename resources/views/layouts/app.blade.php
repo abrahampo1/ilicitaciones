@@ -94,6 +94,10 @@
                         class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('empresas', 'empresa.show') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">Empresas</a>
                     <a href="{{ route('analisis.index') }}"
                         class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('analisis.*') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">Análisis</a>
+                    <a href="{{ route('wrapped.index') }}"
+                        class="px-3 py-1.5 rounded-lg transition-colors {{ request()->routeIs('wrapped.*') ? 'text-white bg-neutral-800' : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50' }}">
+                        <span class="bg-gradient-to-r from-fuchsia-400 to-amber-300 bg-clip-text text-transparent font-medium">Wrapped</span>
+                    </a>
                     <a href="https://github.com/abrahampo1/ilicitaciones" target="_blank" rel="noopener noreferrer"
                         class="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50 transition-colors">GitHub</a>
                 </nav>

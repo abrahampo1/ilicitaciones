@@ -8,6 +8,7 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LicitacionController;
 use App\Http\Controllers\OrganismoController;
+use App\Http\Controllers\WrappedController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -16,6 +17,10 @@ Route::get('/organismos', [OrganismoController::class, 'index'])->name('organism
 Route::get('/organismo/{id}', [OrganismoController::class, 'show'])->name('organismo.show');
 Route::get('/empresas', [EmpresaController::class, 'index'])->name('empresas');
 Route::get('/empresa/{id}', [EmpresaController::class, 'show'])->name('empresa.show');
+
+// Wrapped anual: resumen del gasto público de cada año en formato historias.
+Route::get('/wrapped', [WrappedController::class, 'index'])->name('wrapped.index');
+Route::get('/wrapped/{year}', [WrappedController::class, 'show'])->where('year', '[1-9][0-9]{3}')->name('wrapped.show');
 
 // Periódico de datos (análisis). El orden importa: rutas específicas antes del slug.
 Route::get('/analisis', [AnalisisController::class, 'index'])->name('analisis.index');

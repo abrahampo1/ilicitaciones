@@ -7,6 +7,7 @@ use App\Models\Empresa;
 use App\Models\Licitacion;
 use App\Models\Organismo;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class GenerateSitemap extends Command
 {
@@ -28,6 +29,18 @@ class GenerateSitemap extends Command
         $xml .= $this->url($baseUrl.'/organismos', 'daily', '0.8');
         $xml .= $this->url($baseUrl.'/empresas', 'daily', '0.8');
         $xml .= $this->url($baseUrl.'/analisis', 'daily', '0.8');
+
+        // Wrapped anual (años desde la tabla precalculada, como WrappedController).
+        $xml .= $this->url($baseUrl.'/wrapped', 'weekly', '0.7');
+        $wrappedYears = DB::table('inversiones_anuales')
+            ->where('entity_type', 'empresa')
+            ->whereBetween('year', [2000, (int) now()->format('Y')])
+            ->distinct()
+            ->orderByDesc('year')
+            ->pluck('year');
+        foreach ($wrappedYears as $year) {
+            $xml .= $this->url($baseUrl.'/wrapped/'.$year, 'yearly', '0.6');
+        }
 
         // Análisis publicados (el producto editorial: prioridad por encima de las fichas).
         Article::published()->select('slug', 'updated_at')->chunk(500, function ($articles) use (&$xml, $baseUrl) {

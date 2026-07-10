@@ -115,6 +115,37 @@ it('servir un wrapped precalentado no consulta la tabla adjudicacions', function
     expect(str_contains($queries, 'adjudicacions'))->toBeFalse();
 });
 
+it('el paquete incluye las historias nuevas', function () {
+    seedWrapped(2023);
+
+    $paquete = json_decode(DB::table('estadisticas')->where('clave', 'wrapped_2023')->value('valor'), true);
+
+    expect($paquete['topProvincias'])->not->toBeEmpty();
+    expect($paquete['diaRecord']['num'])->toBe(1);
+    expect($paquete['diaSemanaTop'])->toBeInt();
+    expect($paquete['equivalencias']['sueldos'])->toBeGreaterThan(0);
+    expect($paquete['concentracion']['pctTop10'])->toBeGreaterThan(0);
+
+    $this->get('/wrapped/2023')
+        ->assertStatus(200)
+        ->assertSee('El mapa del dinero')
+        ->assertSee('sueldos medios');
+});
+
+it('reconstruye paquetes persistidos con esquema antiguo', function () {
+    seedWrapped(2023);
+
+    // Simula el paquete de la versión anterior (sin las historias nuevas).
+    DB::table('estadisticas')->where('clave', 'wrapped_2023')->update([
+        'valor' => json_encode(['v' => 1, 'year' => 2023]),
+    ]);
+    Cache::flush();
+
+    $this->get('/wrapped/2023')
+        ->assertStatus(200)
+        ->assertSee('El mapa del dinero');
+});
+
 it('sobrevive al Cache::flush del job releyendo de la tabla estadisticas', function () {
     seedWrapped(2023);
 

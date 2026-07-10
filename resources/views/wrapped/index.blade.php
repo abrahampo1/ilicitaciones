@@ -52,7 +52,7 @@
                                 <p class="text-xl font-bold text-white">{{ Formato::eurosCompactos((float) $totalesPorYear[$y]) }}</p>
                             @endif
                             <p class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-white group-hover:gap-2 transition-all">
-                                Ver mi wrapped <span aria-hidden="true">→</span>
+                                Ver el wrapped <span aria-hidden="true">→</span>
                             </p>
                         </div>
                     </a>

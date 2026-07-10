@@ -12,10 +12,19 @@
     $fmtInt = fn ($n) => number_format((float) $n, 0, ',', '.');
     $maxMes = max(1.0, max($wrapped['porMes']));
 
+    $diasSemana = [0 => 'domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
     $enCurso = ! empty($wrapped['enCurso']);
     $tieneComparativa = $wrapped['deltaPct'] !== null;
     $tieneCategorias = ! empty($wrapped['topCategorias']);
+    $tieneProvincias = ! empty($wrapped['topProvincias']);
     $tieneSalseo = $wrapped['urgentes']['num'] > 0 || $wrapped['sinCompetencia']['num'] > 0;
+    $tieneEquivalencias = ($wrapped['equivalencias']['sueldos'] ?? 0) > 0;
+    // El dúo solo tiene gracia si repitieron (si no, coincide con el contrato del año).
+    $tieneDuo = ! empty($wrapped['duo']) && $wrapped['duo']['num'] >= 2;
+    $tieneElite = ($wrapped['concentracion']['pctTop10'] ?? 0) > 0 && $wrapped['numEmpresas'] > 10;
+    $tieneDiaRecord = ! empty($wrapped['diaRecord']);
+    $fechaRecord = $tieneDiaRecord ? \Illuminate\Support\Carbon::parse($wrapped['diaRecord']['fecha']) : null;
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -268,6 +277,22 @@
         @keyframes lateral {
             from { opacity: 0; transform: translateX(-44px) skewX(-8deg); }
             to { opacity: 1; transform: translateX(0) skewX(0); }
+        }
+
+        /* Variante especular: la otra mitad del dúo entra desde la derecha. */
+        .slide.active .lateral-der.up { animation-name: lateralDer; }
+
+        @keyframes lateralDer {
+            from { opacity: 0; transform: translateX(44px) skewX(8deg); }
+            to { opacity: 1; transform: translateX(0) skewX(0); }
+        }
+
+        .clamp2 {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
         @keyframes flipIn {
@@ -689,6 +714,11 @@
         .bg-categorias { background: linear-gradient(160deg, #065f46 0%, #0d9488 60%, #155e75 100%); }
         .bg-salseo { background: linear-gradient(160deg, #7f1d1d 0%, #991b1b 50%, #450a0a 100%); }
         .bg-final { background: linear-gradient(150deg, #1e1b4b 0%, #581c87 50%, #9d174d 100%); }
+        .bg-cuanto { background: linear-gradient(160deg, #1e3a8a 0%, #172554 55%, #0f172a 100%); }
+        .bg-duo { background: linear-gradient(115deg, #6d28d9 0%, #6d28d9 49.8%, #db2777 50.2%, #db2777 100%); }
+        .bg-elite { background: linear-gradient(160deg, #2e1065 0%, #1e1b4b 60%, #0a0a0a 100%); }
+        .bg-record { background: linear-gradient(160deg, #b45309 0%, #dc2626 55%, #7f1d1d 100%); }
+        .bg-provincias { background: linear-gradient(160deg, #0c4a6e 0%, #155e75 55%, #134e4a 100%); }
 
         .lima { color: #d4f549; }
         .oro { color: #fbbf24; }
@@ -704,9 +734,13 @@
             <div class="controls">
                 <a class="brand" href="{{ route('home') }}">I-Licitaciones · Wrapped</a>
                 <div class="btns">
-                    <button class="ctrl" id="btnPausa" aria-label="Pausar" title="Pausar">⏸</button>
+                    <button class="ctrl" id="btnPausa" aria-label="Pausar" title="Pausar">
+                        <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="2.2" y="1.5" width="3.4" height="11" rx="1.2"/><rect x="8.4" y="1.5" width="3.4" height="11" rx="1.2"/></svg>
+                    </button>
                     <button class="ctrl" id="btnYears" aria-label="Cambiar de año" title="Cambiar de año">{{ $year }}</button>
-                    <a class="ctrl" href="{{ route('wrapped.index') }}" aria-label="Salir" title="Salir">✕</a>
+                    <a class="ctrl" href="{{ route('wrapped.index') }}" aria-label="Salir" title="Salir">
+                        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2.5 2.5l9 9M11.5 2.5l-9 9"/></svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -735,8 +769,9 @@
             <div class="onda o2"></div>
             <div class="inner">
                 <p class="kicker up">En {{ $enCurso ? 'lo que va de' : '' }} {{ $year }} el sector público adjudicó</p>
-                <p class="mega slam d1" style="font-size:clamp(34px,8.5vw,86px)">
-                    <span data-countup="{{ (int) round($wrapped['total']) }}">0</span> €
+                {{-- nowrap + € reducido: el símbolo nunca queda descolgado en su propia línea --}}
+                <p class="mega slam d1" style="font-size:clamp(28px,7.5vw,64px);white-space:nowrap">
+                    <span data-countup="{{ (int) round($wrapped['total']) }}">0</span><span style="font-size:.55em">&nbsp;€</span>
                 </p>
                 <p class="sub up d3">
                     @if ($wrapped['numAdjudicaciones'] === $wrapped['numLicitaciones'])
@@ -762,7 +797,30 @@
             </div>
         </section>
 
-        {{-- 4 · Comparativa con el año anterior --}}
+        {{-- 4 · ¿Cuánto es eso? --}}
+        @if ($tieneEquivalencias)
+            <section class="slide bg-cuanto" data-slide>
+                <div class="blob" style="width:360px;height:360px;background:#38bdf8;top:-120px;right:-100px;opacity:.35"></div>
+                <div class="inner">
+                    <p class="kicker up">¿Y cuánto es eso?</p>
+                    <p class="big up d1">
+                        Daría para pagar
+                        <span class="lima"><span data-countup="{{ $wrapped['equivalencias']['sueldos'] }}">0</span> {{ $wrapped['equivalencias']['sueldos'] === 1 ? 'sueldo medio' : 'sueldos medios' }}</span>
+                        durante un año entero.
+                    </p>
+                    <p class="sub up d3">
+                        @if ($wrapped['equivalencias']['viviendas'] > 0)
+                            O comprar <strong>{{ $fmtInt($wrapped['equivalencias']['viviendas']) }} {{ $wrapped['equivalencias']['viviendas'] === 1 ? 'vivienda' : 'viviendas' }}</strong>.
+                        @endif
+                        @if ($wrapped['equivalencias']['kmAutovia'] > 0)
+                            O construir <strong>{{ $fmtInt($wrapped['equivalencias']['kmAutovia']) }} km de autovía</strong>.
+                        @endif
+                    </p>
+                </div>
+            </section>
+        @endif
+
+        {{-- 5 · Comparativa con el año anterior --}}
         @if ($tieneComparativa)
             <section class="slide bg-compara" data-slide>
                 <div class="blob" style="width:400px;height:400px;background:#fde047;bottom:-140px;left:-120px"></div>
@@ -825,6 +883,41 @@
             </section>
         @endif
 
+        {{-- El dúo del año --}}
+        @if ($tieneDuo)
+            <section class="slide bg-duo" data-slide>
+                <div class="inner">
+                    <p class="kicker up">La pareja del año</p>
+                    <p class="big clamp2 up d1" style="font-size:clamp(20px,4vw,38px)">{{ $wrapped['duo']['organismo'] ?? 'Organismo sin nombre' }}</p>
+                    <p class="mega slam d2" style="font-size:clamp(30px,6vw,54px)">🤝</p>
+                    <p class="big clamp2 lateral-der up d3" style="font-size:clamp(20px,4vw,38px)">{{ $wrapped['duo']['empresa'] ?? 'Empresa sin nombre' }}</p>
+                    <p class="sub up d4">
+                        <strong>{{ $fmtInt($wrapped['duo']['num']) }} contratos</strong> juntos este año,
+                        por <strong>{{ Formato::eurosCompactos((float) $wrapped['duo']['total']) }}</strong>.
+                    </p>
+                </div>
+            </section>
+        @endif
+
+        {{-- El reparto del pastel --}}
+        @if ($tieneElite)
+            <section class="slide bg-elite" data-slide>
+                <div class="blob" style="width:380px;height:380px;background:#fbbf24;bottom:-140px;right:-120px;opacity:.25"></div>
+                <div class="inner">
+                    <p class="kicker up oro">El reparto del pastel</p>
+                    <p class="mega slam d1">{{ str_replace('.', ',', (string) $wrapped['concentracion']['pctTop10']) }}%</p>
+                    <p class="big up d2">de todo el dinero se lo llevaron solo 10 empresas.</p>
+                    <p class="sub up d4">
+                        @if ($wrapped['numEmpresas'] - 10 === 1)
+                            La otra empresa se llevó el resto.
+                        @else
+                            Las otras {{ $fmtInt($wrapped['numEmpresas'] - 10) }} se repartieron el resto.
+                        @endif
+                    </p>
+                </div>
+            </section>
+        @endif
+
         {{-- 7 · El contrato del año --}}
         @if ($wrapped['mayorAdjudicacion'])
             <section class="slide bg-contrato" data-slide>
@@ -872,6 +965,27 @@
             </div>
         </section>
 
+        {{-- El día récord --}}
+        @if ($tieneDiaRecord)
+            <section class="slide bg-record" data-slide>
+                <div class="blob" style="width:380px;height:380px;background:#fde047;top:-130px;left:-110px;opacity:.4"></div>
+                <div class="inner">
+                    <p class="kicker up">El día de más movimiento</p>
+                    <p class="big up d1">
+                        El <strong>{{ $fechaRecord->day }} de {{ $meses[$fechaRecord->month] }}</strong> se adjudicaron
+                        {{ $fmtInt($wrapped['diaRecord']['num']) }} contratos por
+                        <strong>{{ Formato::eurosCompactos((float) $wrapped['diaRecord']['total']) }}</strong>.
+                    </p>
+                    @if ($wrapped['diaSemanaTop'] !== null)
+                        <p class="sub up d3">
+                            Y el día de la semana favorito para firmar fue el
+                            <strong>{{ $diasSemana[$wrapped['diaSemanaTop']] }}</strong>.
+                        </p>
+                    @endif
+                </div>
+            </section>
+        @endif
+
         {{-- 9 · Categorías --}}
         @if ($tieneCategorias)
             <section class="slide bg-categorias" data-slide>
@@ -885,6 +999,26 @@
                                 <span class="pos">{{ $i + 1 }}</span>
                                 <span class="nom">{{ $cat['nombre'] }}</span>
                                 <span class="imp">{{ Formato::eurosCompactos((float) $cat['total']) }}</span>
+                            </li>
+                        @endforeach
+                    </ol>
+                </div>
+            </section>
+        @endif
+
+        {{-- El mapa del dinero --}}
+        @if ($tieneProvincias)
+            <section class="slide bg-provincias" data-slide>
+                <div class="blob" style="width:360px;height:360px;background:#67e8f9;bottom:-120px;right:-100px;opacity:.35"></div>
+                <div class="inner">
+                    <p class="kicker up">El mapa del dinero</p>
+                    <p class="big up d1">Las provincias donde más se contrató:</p>
+                    <ol class="ranking">
+                        @foreach ($wrapped['topProvincias'] as $i => $prov)
+                            <li class="up d{{ $i + 2 }}">
+                                <span class="pos">{{ $i + 1 }}</span>
+                                <span class="nom">{{ $prov['provincia'] }}</span>
+                                <span class="imp">{{ Formato::eurosCompactos((float) $prov['total']) }}</span>
                             </li>
                         @endforeach
                     </ol>
@@ -1054,6 +1188,9 @@
                 if (rafId === null) rafId = requestAnimationFrame(tick);
             }
 
+            const SVG_PAUSA = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="2.2" y="1.5" width="3.4" height="11" rx="1.2"/><rect x="8.4" y="1.5" width="3.4" height="11" rx="1.2"/></svg>';
+            const SVG_PLAY = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M4.2 2.1v9.8c0 .9 1 1.5 1.8 1l7.4-4.9c.7-.5.7-1.5 0-2L6 1.1c-.8-.5-1.8.1-1.8 1z"/></svg>';
+
             function togglePausa(forzar) {
                 const nuevo = typeof forzar === 'boolean' ? forzar : !pausado;
                 if (nuevo === pausado) return;
@@ -1063,7 +1200,7 @@
                     inicioSlide = performance.now();
                 }
                 pausado = nuevo;
-                btnPausa.textContent = pausado ? '▶' : '⏸';
+                btnPausa.innerHTML = pausado ? SVG_PLAY : SVG_PAUSA;
                 btnPausa.title = btnPausa.ariaLabel = pausado ? 'Reanudar' : 'Pausar';
             }
 

@@ -14,8 +14,23 @@ use Illuminate\Support\Facades\DB;
  */
 class WrappedData
 {
+    /**
+     * Versión del contrato del paquete. Al añadir campos nuevos hay que subirla:
+     * paquete() descarta los paquetes persistidos con versión anterior y los
+     * reconstruye, evitando índices indefinidos en la vista tras un despliegue.
+     */
+    private const SCHEMA_VERSION = 2;
+
     // Población de España (INE, 2025). Solo para la equivalencia €/habitante.
     private const POBLACION_ESPANA = 48_800_000;
+
+    // Constantes de las equivalencias del slide "¿Cuánto es eso?" (valores medios
+    // aproximados en España: salario bruto anual INE, vivienda tipo, km de autovía).
+    private const SUELDO_MEDIO_ANUAL = 28_050;
+
+    private const VIVIENDA_MEDIA = 200_000;
+
+    private const KM_AUTOVIA = 5_000_000;
 
     /**
      * Precalcula y persiste todo lo que consume el Wrapped. Lo invoca
@@ -73,10 +88,10 @@ class WrappedData
     /** Paquete completo del wrapped de un año. */
     public function paquete(int $year): array
     {
-        return cache()->remember("wrapped:v3:{$year}", 21600, function () use ($year) {
+        return cache()->remember("wrapped:v4:{$year}", 21600, function () use ($year) {
             $fila = $this->leer("wrapped_{$year}");
 
-            if (is_array($fila)) {
+            if (is_array($fila) && ($fila['v'] ?? 0) === self::SCHEMA_VERSION) {
                 return $fila;
             }
 
@@ -217,6 +232,60 @@ class WrappedData
             ->selectRaw('licitacions.id as licitacion_id, licitacions.titulo, adjudicacions.importe, organismos.nombre as organismo, empresas.nombre as empresa')
             ->first();
 
+        // Top provincias por gasto (vía la provincia del organismo contratante).
+        $topProvincias = $base()
+            ->join('licitacions', 'licitacions.id', '=', 'adjudicacions.licitacion_id')
+            ->join('organismos', 'organismos.id', '=', 'licitacions.organismo_id')
+            ->whereNotNull('organismos.provincia')
+            ->where('organismos.provincia', '!=', '')
+            ->selectRaw('organismos.provincia, SUM(adjudicacions.importe) as total, COUNT(*) as num')
+            ->groupBy('organismos.provincia')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        // La pareja organismo→empresa que más dinero movió entre sí.
+        $duo = $base()
+            ->join('licitacions', 'licitacions.id', '=', 'adjudicacions.licitacion_id')
+            ->join('organismos', 'organismos.id', '=', 'licitacions.organismo_id')
+            ->join('empresas', 'empresas.id', '=', 'adjudicacions.empresa_id')
+            ->selectRaw('organismos.nombre as organismo, empresas.nombre as empresa, SUM(adjudicacions.importe) as total, COUNT(*) as num')
+            ->groupBy('licitacions.organismo_id', 'adjudicacions.empresa_id', 'organismos.nombre', 'empresas.nombre')
+            ->orderByDesc('total')
+            ->limit(1)
+            ->first();
+
+        // Concentración: cuota del top 10 de empresas sobre el total del año.
+        $top10Total = (float) DB::query()->fromSub(
+            $base()
+                ->whereNotNull('empresa_id')
+                ->selectRaw('SUM(importe) as t')
+                ->groupBy('empresa_id')
+                ->orderByDesc('t')
+                ->limit(10),
+            'top10'
+        )->sum('t');
+
+        // El día con más dinero adjudicado. date() trunca la hora y es válido tanto
+        // en MySQL (DATE()) como en SQLite (date()).
+        $diaRecord = $base()
+            ->selectRaw('date(fecha_adjudicacion) as fecha, SUM(importe) as total, COUNT(*) as num')
+            ->groupBy(DB::raw('date(fecha_adjudicacion)'))
+            ->orderByDesc('total')
+            ->limit(1)
+            ->first();
+
+        // Día de la semana con más firmas (0 = domingo … 6 = sábado en ambos motores).
+        $dowExpr = $this->isMysql()
+            ? '(DAYOFWEEK(fecha_adjudicacion) - 1)'
+            : "CAST(strftime('%w', fecha_adjudicacion) AS INTEGER)";
+        $diaSemanaTop = $base()
+            ->selectRaw("{$dowExpr} as dow, COUNT(*) as num")
+            ->groupBy(DB::raw($dowExpr))
+            ->orderByDesc('num')
+            ->limit(1)
+            ->first();
+
         // Códigos CODICE compartidos con los detectores del periódico de datos.
         $urgenciaCodigos = array_map('strval', (array) config('periodico.umbrales.urgencia_codigos', ['2', '3']));
         $sinCompetenciaCodigos = array_map('strval', (array) config('periodico.umbrales.sin_competencia_codigos', ['3', '6']));
@@ -237,6 +306,7 @@ class WrappedData
         // Todo arrays puros: el paquete se persiste como JSON en `estadisticas` y la
         // vista debe recibir la misma forma venga del build o de la rehidratación.
         return [
+            'v' => self::SCHEMA_VERSION,
             'year' => $year,
             'enCurso' => $enCurso,
             'total' => $total,
@@ -251,7 +321,19 @@ class WrappedData
             'topOrganismos' => $topOrganismos->map(fn ($r) => (array) $r)->all(),
             'topEmpresas' => $topEmpresas->map(fn ($r) => (array) $r)->all(),
             'topCategorias' => $topCategorias->map(fn ($r) => (array) $r)->all(),
+            'topProvincias' => $topProvincias->map(fn ($r) => (array) $r)->all(),
             'mayorAdjudicacion' => $mayor ? (array) $mayor : null,
+            'duo' => $duo ? (array) $duo : null,
+            'concentracion' => [
+                'pctTop10' => $total > 0 ? round($top10Total / $total * 100, 1) : 0,
+            ],
+            'diaRecord' => $diaRecord ? (array) $diaRecord : null,
+            'diaSemanaTop' => $diaSemanaTop ? (int) $diaSemanaTop->dow : null,
+            'equivalencias' => [
+                'sueldos' => (int) floor($total / self::SUELDO_MEDIO_ANUAL),
+                'viviendas' => (int) floor($total / self::VIVIENDA_MEDIA),
+                'kmAutovia' => (int) floor($total / self::KM_AUTOVIA),
+            ],
             'urgentes' => [
                 'num' => (int) $urgentes->num,
                 'importe' => (float) $urgentes->importe,

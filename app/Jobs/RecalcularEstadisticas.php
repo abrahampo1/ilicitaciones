@@ -40,6 +40,7 @@ class RecalcularEstadisticas implements ShouldBeUnique, ShouldQueue
         $this->recalcularOrganismos();
         $this->recalcularInversionesAnuales();
         $this->recalcularEstadisticasGlobales();
+        $this->recalcularWrapped();
         $this->limpiarCaches();
     }
 
@@ -162,11 +163,24 @@ class RecalcularEstadisticas implements ShouldBeUnique, ShouldQueue
         $this->guardar('home_top_organismos', $topOrganismos);
     }
 
+    /**
+     * Precalienta los paquetes del Wrapped anual (tabla `estadisticas`) para que
+     * ningún request tenga que ejecutar las agregaciones por año. Debe correr
+     * después de recalcularInversionesAnuales (fuente de la lista de años).
+     */
+    private function recalcularWrapped(): void
+    {
+        app(\App\Services\WrappedData::class)->warm();
+    }
+
     private function guardar(string $clave, $valor): void
     {
-        DB::table('estadisticas')->updateOrInsert(
-            ['clave' => $clave],
-            ['valor' => json_encode($valor), 'updated_at' => now()]
+        // upsert atómico: evita la carrera con los fallbacks cold-start de los
+        // requests web, que escriben en la misma tabla (PK clave).
+        DB::table('estadisticas')->upsert(
+            [['clave' => $clave, 'valor' => json_encode($valor), 'updated_at' => now()]],
+            ['clave'],
+            ['valor', 'updated_at']
         );
     }
 

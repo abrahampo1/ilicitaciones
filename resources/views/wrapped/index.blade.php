@@ -25,7 +25,7 @@
                 <span class="bg-gradient-to-r from-fuchsia-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent">Wrapped</span>
             </h1>
             <p class="text-lg text-neutral-300 max-w-2xl mx-auto">
-                El año del gasto público español, contado como te cuenta Spotify tu año musical.
+                El resumen anual del gasto público español, contado en historias.
                 Elige un año y descubre quién gastó, quién ganó y cuánto costó.
             </p>
         </header>

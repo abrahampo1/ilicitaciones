@@ -43,7 +43,7 @@
     <meta property="og:url" content="{{ route('wrapped.show', ['year' => $year]) }}" />
     <meta property="og:title" content="Wrapped {{ $year }} · El año del gasto público" />
     <meta property="og:description"
-        content="{{ Formato::eurosCompactos($wrapped['total']) }} en contratos públicos. Así sonó el {{ $year }} del dinero público español." />
+        content="{{ Formato::eurosCompactos($wrapped['total']) }} en contratos públicos. Así fue el {{ $year }} del dinero público español." />
     <meta property="og:site_name" content="I-Licitaciones" />
     <meta property="og:locale" content="es_ES" />
 
@@ -136,18 +136,10 @@
 
         .ctrl:hover { background: rgba(0, 0, 0, .55); }
 
-        /* ---- Zonas de navegación tap ---- */
-        .tapzone {
-            position: absolute;
-            top: 0; bottom: 0;
-            z-index: 20;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-        }
-
-        .tapzone.prev { left: 0; width: 32%; }
-        .tapzone.next { right: 0; width: 68%; }
+        /* La navegación por toque va por listeners globales sobre .wrapped que
+           ignoran enlaces y botones: sin capas transparentes ni guerras de z-index
+           (las animaciones con transform/opacity crean stacking contexts que
+           romperían cualquier solución basada en superponer zonas). */
 
         /* ---- Slides ---- */
         .slide {
@@ -187,13 +179,61 @@
             to { transform: translate(40px, -50px) scale(1.15); }
         }
 
-        /* Animaciones de entrada, retriggereables al activar el slide */
+        /* ---- Sistema de animaciones (retriggereables al activar el slide) ---- */
+
+        /* El slide entero entra con un leve zoom que asienta. */
+        .slide.active {
+            animation: llegar .55s cubic-bezier(.2, .8, .2, 1) both;
+        }
+
+        @keyframes llegar {
+            from { opacity: .2; transform: scale(1.04); }
+            /* transform none al terminar: un scale(1) persistente crearía un stacking
+               context en el slide y las tapzones volverían a tapar los botones. */
+            to { opacity: 1; transform: none; }
+        }
+
+        /* Fondos degradados vivos: paneo lento y continuo. */
+        .slide[class*="bg-"] {
+            background-size: 170% 170%;
+        }
+
+        .slide.active[class*="bg-"] {
+            animation: llegar .55s cubic-bezier(.2, .8, .2, 1) both,
+                fondoPan 18s ease-in-out infinite alternate;
+        }
+
+        @keyframes fondoPan {
+            from { background-position: 0% 0%; }
+            to { background-position: 100% 100%; }
+        }
+
         .slide.active .up {
             animation: subir .7s cubic-bezier(.2, .8, .2, 1) both;
         }
 
         .slide.active .pop {
             animation: pop .8s cubic-bezier(.2, .9, .3, 1.3) both;
+        }
+
+        /* Cifras protagonista: aterrizan desde grande y desenfocado, con rebote. */
+        .slide.active .slam {
+            animation: slam .85s cubic-bezier(.2, .9, .25, 1) both;
+        }
+
+        /* Kickers: las letras se comprimen hasta su sitio. */
+        .slide.active .kicker.up {
+            animation-name: tracking;
+        }
+
+        /* Rankings: cada puesto entra lateralmente enderezándose. */
+        .slide.active .ranking li.up {
+            animation-name: lateral;
+        }
+
+        /* Tarjeta final: flip 3D suave. */
+        .slide.active .card.pop {
+            animation: flipIn .9s cubic-bezier(.2, .8, .2, 1) both;
         }
 
         .d1 { animation-delay: .15s !important; }
@@ -213,9 +253,116 @@
             to { opacity: 1; transform: scale(1); }
         }
 
+        @keyframes slam {
+            0% { opacity: 0; transform: scale(1.75); filter: blur(14px); }
+            55% { opacity: 1; transform: scale(.965); filter: blur(0); }
+            76% { transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+
+        @keyframes tracking {
+            from { opacity: 0; letter-spacing: .6em; }
+            to { opacity: 1; letter-spacing: .22em; }
+        }
+
+        @keyframes lateral {
+            from { opacity: 0; transform: translateX(-44px) skewX(-8deg); }
+            to { opacity: 1; transform: translateX(0) skewX(0); }
+        }
+
+        @keyframes flipIn {
+            from { opacity: 0; transform: perspective(900px) rotateX(26deg) translateY(44px); }
+            to { opacity: 1; transform: perspective(900px) rotateX(0) translateY(0); }
+        }
+
+        /* Brillo barrido sobre el importe del contrato del año (con fallback dorado
+           plano donde no exista background-clip: text). */
+        .slide.active .brillo {
+            color: #fbbf24;
+            animation: slam .85s cubic-bezier(.2, .9, .25, 1) both;
+        }
+
+        @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+            .slide.active .brillo {
+                background-image: linear-gradient(110deg, #fbbf24 42%, #fff7d6 50%, #fbbf24 58%);
+                background-size: 240% 100%;
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                animation: slam .85s cubic-bezier(.2, .9, .25, 1) both,
+                    brillar 2.8s ease-in-out 1.1s infinite;
+            }
+        }
+
+        @keyframes brillar {
+            from { background-position: 130% 0; }
+            to { background-position: -70% 0; }
+        }
+
+        /* Ondas expansivas tras la cifra total. */
+        .onda {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 64vmin;
+            height: 64vmin;
+            margin: -32vmin 0 0 -32vmin;
+            border: 2px solid rgba(0, 0, 0, .18);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .slide.active .onda {
+            animation: ondear 3.4s ease-out infinite;
+        }
+
+        .slide.active .onda.o2 { animation-delay: 1.7s; }
+
+        @keyframes ondear {
+            0% { transform: scale(.45); opacity: .55; }
+            100% { transform: scale(1.65); opacity: 0; }
+        }
+
+        /* Confeti del cierre. */
+        .confetti {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .confetti span {
+            position: absolute;
+            top: -8%;
+            font-size: 20px;
+            font-weight: 900;
+            opacity: 0;
+        }
+
+        .slide.active .confetti span {
+            animation: caer linear infinite;
+        }
+
+        @keyframes caer {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            6% { opacity: .9; }
+            100% { transform: translateY(115vh) rotate(560deg); opacity: .4; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-            .slide.active .up, .slide.active .pop, .blob { animation: none !important; opacity: 1; }
-            .slide.active .up, .slide.active .pop { opacity: 1; }
+            .slide.active, .slide.active[class*="bg-"], .slide.active .up, .slide.active .pop,
+            .slide.active .slam, .slide.active .card.pop, .slide.active .onda,
+            .slide.active .confetti span {
+                animation: none !important;
+                opacity: 1;
+            }
+
+            /* Los blobs conservan su opacidad decorativa: a opacidad 1 taparían el texto. */
+            .blob { animation: none !important; }
+
+            .slide.active .brillo { animation: none !important; color: #fbbf24; background: none; }
+            .slide.active .onda, .slide.active .confetti span { opacity: 0; }
         }
 
         /* ---- Tipografía de slides ---- */
@@ -382,15 +529,23 @@
             font-size: 56px;
             font-weight: 900;
             line-height: 1;
-            background: linear-gradient(90deg, #e879f9, #fbbf24, #34d399);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            color: #fbbf24;
+        }
+
+        @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+            .card .anio {
+                background: linear-gradient(90deg, #e879f9, #fbbf24, #34d399);
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+            }
         }
 
         .card .cols {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            /* minmax(0,...): sin él, los nombres largos con nowrap ensanchan la
+               columna y desbordan la tarjeta en vez de cortarse con ellipsis. */
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 18px;
             margin: 20px 0;
         }
@@ -529,7 +684,7 @@
         .bg-compara { background: linear-gradient(160deg, #ea580c 0%, #db2777 70%, #9d174d 100%); }
         .bg-organismos { background: linear-gradient(160deg, #312e81 0%, #4338ca 50%, #7c3aed 100%); }
         .bg-empresas { background: linear-gradient(160deg, #9f1239 0%, #e11d48 55%, #fb7185 130%); }
-        .bg-hit { background: radial-gradient(120% 120% at 50% 0%, #422006 0%, #0a0a0a 65%); }
+        .bg-contrato { background: radial-gradient(120% 120% at 50% 0%, #422006 0%, #0a0a0a 65%); }
         .bg-meses { background: linear-gradient(160deg, #0e7490 0%, #0369a1 55%, #1e3a8a 100%); }
         .bg-categorias { background: linear-gradient(160deg, #065f46 0%, #0d9488 60%, #155e75 100%); }
         .bg-salseo { background: linear-gradient(160deg, #7f1d1d 0%, #991b1b 50%, #450a0a 100%); }
@@ -562,16 +717,13 @@
             @endforeach
         </div>
 
-        <button class="tapzone prev" id="tapPrev" aria-label="Anterior"></button>
-        <button class="tapzone next" id="tapNext" aria-label="Siguiente"></button>
-
         {{-- 1 · Intro --}}
         <section class="slide bg-intro" data-slide>
             <div class="blob" style="width:420px;height:420px;background:#f0abfc;top:-90px;left:-110px"></div>
             <div class="blob" style="width:360px;height:360px;background:#38bdf8;bottom:-100px;right:-90px;animation-delay:-6s"></div>
             <div class="inner">
                 <p class="kicker up">Tu dinero también estuvo aquí</p>
-                <h1 class="mega pop d1">Wrapped<br>{{ $year }}</h1>
+                <h1 class="mega slam d1">Wrapped<br>{{ $year }}</h1>
                 <p class="sub up d3">El año del gasto público español,<br>contado en {{ $fmtInt($wrapped['numAdjudicaciones']) }} contratos.</p>
             </div>
             <p class="hint">Toca para continuar →</p>
@@ -579,9 +731,11 @@
 
         {{-- 2 · Total adjudicado --}}
         <section class="slide bg-total" data-slide>
+            <div class="onda"></div>
+            <div class="onda o2"></div>
             <div class="inner">
                 <p class="kicker up">En {{ $enCurso ? 'lo que va de' : '' }} {{ $year }} el sector público adjudicó</p>
-                <p class="mega pop d1" style="font-size:clamp(34px,8.5vw,86px)">
+                <p class="mega slam d1" style="font-size:clamp(34px,8.5vw,86px)">
                     <span data-countup="{{ (int) round($wrapped['total']) }}">0</span> €
                 </p>
                 <p class="sub up d3">
@@ -601,7 +755,7 @@
         <section class="slide bg-ritmo" data-slide>
             <div class="blob" style="width:380px;height:380px;background:#d4f549;top:-140px;right:-120px;opacity:.25"></div>
             <div class="inner">
-                <p class="kicker up">El gasto no paró de sonar</p>
+                <p class="kicker up">El gasto no se tomó ni un descanso</p>
                 <p class="big up d1">Cada día{{ $enCurso ? '' : ' del año' }}:<br><span class="lima"><span data-countup="{{ (int) round($wrapped['porDia']) }}">0</span> €</span></p>
                 <p class="big up d3" style="margin-top:26px">Cada segundo:<br><span class="fucsia"><span data-countup="{{ (int) round($wrapped['porSegundo']) }}">0</span> €</span></p>
                 <p class="sub up d5">Unos <strong>{{ $fmtInt(round($wrapped['porHabitante'])) }} €</strong> por cada habitante de España.</p>
@@ -614,17 +768,17 @@
                 <div class="blob" style="width:400px;height:400px;background:#fde047;bottom:-140px;left:-120px"></div>
                 <div class="inner">
                     <p class="kicker up">¿Más o menos que en {{ $year - 1 }}?</p>
-                    <p class="mega pop d1">{{ $wrapped['deltaPct'] > 0 ? '+' : '' }}{{ str_replace('.', ',', (string) $wrapped['deltaPct']) }}%</p>
+                    <p class="mega slam d1">{{ $wrapped['deltaPct'] > 0 ? '+' : '' }}{{ str_replace('.', ',', (string) $wrapped['deltaPct']) }}%</p>
                     <p class="sub up d3">
                         @php $periodoAnterior = $enCurso ? 'al mismo periodo de '.($year - 1) : 'a '.($year - 1); @endphp
                         @if ($wrapped['deltaPct'] >= 0)
                             El volumen adjudicado subió respecto {{ $periodoAnterior }}
                             ({{ Formato::eurosCompactos($wrapped['prevTotal']) }}).
-                            El gasto público no conoce el modo repetición… o sí.
+                            El gasto público pisó el acelerador.
                         @else
                             El volumen adjudicado bajó respecto {{ $periodoAnterior }}
                             ({{ Formato::eurosCompactos($wrapped['prevTotal']) }}).
-                            Un año más tranquilo en la lista de reproducción del gasto.
+                            Un año más tranquilo para las arcas públicas.
                         @endif
                     </p>
                 </div>
@@ -636,8 +790,8 @@
             <section class="slide bg-organismos" data-slide>
                 <div class="blob" style="width:360px;height:360px;background:#a5b4fc;top:-120px;right:-100px"></div>
                 <div class="inner">
-                    <p class="kicker up">Tus organismos más escuchados</p>
-                    <p class="big up d1">{{ $fmtInt($wrapped['numOrganismos']) }} organismos licitaron.<br>Estos pusieron la música:</p>
+                    <p class="kicker up">Los organismos protagonistas</p>
+                    <p class="big up d1">{{ $fmtInt($wrapped['numOrganismos']) }} organismos licitaron.<br>Estos movieron el dinero:</p>
                     <ol class="ranking">
                         @foreach ($wrapped['topOrganismos'] as $i => $org)
                             <li class="up d{{ $i + 2 }}">
@@ -656,8 +810,8 @@
             <section class="slide bg-empresas" data-slide>
                 <div class="blob" style="width:380px;height:380px;background:#fecdd3;bottom:-130px;right:-110px"></div>
                 <div class="inner">
-                    <p class="kicker up">Las empresas en bucle</p>
-                    <p class="big up d1">{{ $fmtInt($wrapped['numEmpresas']) }} empresas se llevaron contrato.<br>Estas sonaron sin parar:</p>
+                    <p class="kicker up">Las empresas imparables</p>
+                    <p class="big up d1">{{ $fmtInt($wrapped['numEmpresas']) }} empresas se llevaron contrato.<br>Estas no pararon de ganar:</p>
                     <ol class="ranking">
                         @foreach ($wrapped['topEmpresas'] as $i => $emp)
                             <li class="up d{{ $i + 2 }}">
@@ -673,11 +827,11 @@
 
         {{-- 7 · El contrato del año --}}
         @if ($wrapped['mayorAdjudicacion'])
-            <section class="slide bg-hit" data-slide>
+            <section class="slide bg-contrato" data-slide>
                 <div class="blob" style="width:420px;height:420px;background:#f59e0b;top:-160px;left:50%;margin-left:-210px;opacity:.3"></div>
                 <div class="inner">
-                    <p class="kicker up oro">🏆 El hit del año</p>
-                    <p class="mega pop d1 oro" style="font-size:clamp(34px,8vw,80px)">
+                    <p class="kicker up oro">🏆 El contrato del año</p>
+                    <p class="mega brillo d1" style="font-size:clamp(34px,8vw,80px)">
                         {{ Formato::eurosCompactos((float) $wrapped['mayorAdjudicacion']['importe']) }}
                     </p>
                     <p class="sub up d3" style="font-weight:700">
@@ -723,7 +877,7 @@
             <section class="slide bg-categorias" data-slide>
                 <div class="blob" style="width:340px;height:340px;background:#6ee7b7;top:-110px;left:-100px"></div>
                 <div class="inner">
-                    <p class="kicker up">Tus géneros favoritos</p>
+                    <p class="kicker up">Las categorías estrella</p>
                     <p class="big up d1">En qué se fue el dinero:</p>
                     <ol class="ranking">
                         @foreach ($wrapped['topCategorias'] as $i => $cat)
@@ -743,7 +897,7 @@
             <section class="slide bg-salseo" data-slide>
                 <div class="blob" style="width:380px;height:380px;background:#fca5a5;bottom:-140px;left:-120px;opacity:.35"></div>
                 <div class="inner">
-                    <p class="kicker up">La cara B del disco</p>
+                    <p class="kicker up">La letra pequeña</p>
                     @if ($wrapped['urgentes']['num'] > 0)
                         <p class="big up d1">
                             <span class="oro">{{ $fmtInt($wrapped['urgentes']['num']) }}</span> contratos
@@ -757,7 +911,7 @@
                             se repartieron sin competencia entre empresas.
                         </p>
                     @endif
-                    <p class="sub up d5">Sin saltos de canción: adjudicación directa o negociado sin publicidad.</p>
+                    <p class="sub up d5">Sin concurso de por medio: adjudicación directa o negociado sin publicidad.</p>
                 </div>
             </section>
         @endif
@@ -765,6 +919,12 @@
         {{-- 11 · Resumen final --}}
         <section class="slide bg-final" data-slide>
             <div class="blob" style="width:400px;height:400px;background:#c084fc;top:-140px;right:-120px"></div>
+            <div class="confetti" aria-hidden="true">
+                @php $simbolos = ['€', '€', '▮', '●', '€', '▲', '€', '■', '€', '◆', '€', '▰']; @endphp
+                @foreach ($simbolos as $i => $simbolo)
+                    <span style="left:{{ 4 + $i * 8 }}%; color:{{ ['#e879f9', '#fbbf24', '#34d399', '#38bdf8', '#fb7185'][$i % 5] }}; animation-duration:{{ 3.4 + ($i % 5) * 0.7 }}s; animation-delay:{{ ($i % 7) * 0.55 }}s; font-size:{{ 15 + ($i % 4) * 5 }}px">{{ $simbolo }}</span>
+                @endforeach
+            </div>
             <div class="inner" style="max-width:480px">
                 <div class="card pop">
                     <h2>Wrapped · Gasto público</h2>
@@ -913,8 +1073,6 @@
             let pausadoPorPulsacion = false;
 
             function alPulsar(e) {
-                // Captura: el pointerup llega a la zona aunque se suelte fuera de ella.
-                try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) { }
                 pulsadoEn = performance.now();
                 pulsadoX = e.clientX;
                 if (!pausado) {
@@ -930,21 +1088,39 @@
                 }
             }
 
-            function alSoltar(e, delta) {
+            function alSoltar(e) {
                 // Un flick (desplazamiento) no cuenta como tap: lo navega el handler de swipe.
                 const fueTap = performance.now() - pulsadoEn < 250 && Math.abs(e.clientX - pulsadoX) < 10;
                 reanudarTrasPulsacion();
-                if (fueTap) irA(actual + delta);
+                if (!fueTap) return;
+                if (yearsMenu.classList.contains('open')) return; // ese tap solo cierra el menú
+                irA(actual + (e.clientX < window.innerWidth * 0.32 ? -1 : 1));
             }
 
-            const tapPrev = document.getElementById('tapPrev');
-            const tapNext = document.getElementById('tapNext');
-            tapPrev.addEventListener('pointerdown', alPulsar);
-            tapNext.addEventListener('pointerdown', alPulsar);
-            tapPrev.addEventListener('pointerup', e => alSoltar(e, -1));
-            tapNext.addEventListener('pointerup', e => alSoltar(e, 1));
-            tapPrev.addEventListener('pointercancel', reanudarTrasPulsacion);
-            tapNext.addEventListener('pointercancel', reanudarTrasPulsacion);
+            // Navegación global: cualquier toque que no sea sobre un control navega
+            // (izquierda 32% = anterior, resto = siguiente), como en las stories.
+            // Solo se sigue un puntero a la vez: un segundo dedo no corrompe el gesto.
+            const zona = document.getElementById('wrapped');
+            const esInteractivo = el => el.closest && el.closest('a, button, .years-menu');
+            let punteroActivo = null;
+
+            zona.addEventListener('pointerdown', e => {
+                if (esInteractivo(e.target) || punteroActivo !== null) return;
+                punteroActivo = e.pointerId;
+                try { zona.setPointerCapture(e.pointerId); } catch (_) { }
+                alPulsar(e);
+            });
+            zona.addEventListener('pointerup', e => {
+                if (e.pointerId !== punteroActivo) return;
+                punteroActivo = null;
+                if (!pausadoPorPulsacion && esInteractivo(e.target)) return;
+                alSoltar(e);
+            });
+            zona.addEventListener('pointercancel', e => {
+                if (e.pointerId !== punteroActivo) return;
+                punteroActivo = null;
+                reanudarTrasPulsacion();
+            });
 
             // Teclado.
             document.addEventListener('keydown', e => {
@@ -956,14 +1132,17 @@
                 if (e.key.toLowerCase() === 'p') togglePausa();
             });
 
-            // Swipe táctil.
+            // Swipe táctil: solo gestos de un dedo y nunca con el menú de años abierto.
             let touchX = null;
-            document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+            document.addEventListener('touchstart', e => {
+                touchX = e.touches.length === 1 ? e.touches[0].clientX : null;
+            }, { passive: true });
             document.addEventListener('touchend', e => {
                 if (touchX === null) return;
                 const dx = e.changedTouches[0].clientX - touchX;
-                if (Math.abs(dx) > 60) irA(actual + (dx < 0 ? 1 : -1));
                 touchX = null;
+                if (yearsMenu.classList.contains('open')) return;
+                if (Math.abs(dx) > 60) irA(actual + (dx < 0 ? 1 : -1));
             }, { passive: true });
 
             btnPausa.addEventListener('click', () => togglePausa());
@@ -978,7 +1157,7 @@
                 btnCompartir.addEventListener('click', async () => {
                     const datos = {
                         title: document.title,
-                        text: 'El Wrapped {{ $year }} del gasto público: {{ Formato::eurosCompactos($wrapped['total']) }} en contratos. 🎧💸',
+                        text: 'El Wrapped {{ $year }} del gasto público: {{ Formato::eurosCompactos($wrapped['total']) }} en contratos. 💸',
                         url: window.location.href,
                     };
                     if (navigator.share) {

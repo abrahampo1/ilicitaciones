@@ -94,6 +94,27 @@ it('el año en curso compara contra el mismo periodo y lo dice en el texto', fun
         ->assertSee('mismo periodo de '.($year - 1));
 });
 
+it('el job de estadisticas precalienta el wrapped en la tabla estadisticas', function () {
+    seedWrapped(2023);
+
+    // Sin visitar ninguna página: el warm del job ya dejó todo persistido.
+    expect(DB::table('estadisticas')->where('clave', 'wrapped_years')->exists())->toBeTrue();
+    expect(DB::table('estadisticas')->where('clave', 'wrapped_index_totales')->exists())->toBeTrue();
+    expect(DB::table('estadisticas')->where('clave', 'wrapped_2023')->exists())->toBeTrue();
+});
+
+it('servir un wrapped precalentado no consulta la tabla adjudicacions', function () {
+    seedWrapped(2023);
+    Cache::flush();
+
+    DB::enableQueryLog();
+    $this->get('/wrapped/2023')->assertStatus(200);
+    $queries = collect(DB::getQueryLog())->pluck('query')->implode(' | ');
+    DB::disableQueryLog();
+
+    expect(str_contains($queries, 'adjudicacions'))->toBeFalse();
+});
+
 it('sobrevive al Cache::flush del job releyendo de la tabla estadisticas', function () {
     seedWrapped(2023);
 
